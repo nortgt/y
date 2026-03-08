@@ -19,280 +19,275 @@ end
 
 
 -- StarterGui.TrezChat
-G2L["1"] = Instance.new("ScreenGui", game.CoreGui);
-G2L["1"]["Name"] = [[TrezChat]];
-G2L["1"]["ZIndexBehavior"] = Enum.ZIndexBehavior.Sibling;
+G2L.ScreenGui = Instance.new("ScreenGui", game.CoreGui);
+G2L.ScreenGui.Name = "TrezChat";
+G2L.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
 
 
 -- StarterGui.TrezChat.Main
-G2L["2"] = Instance.new("Frame", G2L["1"]);
-G2L["2"]["ZIndex"] = 2;
-G2L["2"]["BorderSizePixel"] = 0;
-G2L["2"]["BackgroundColor3"] = Color3.fromRGB(40, 40, 40);
-G2L["2"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-G2L["2"]["Size"] = UDim2.new(0.25337, 100, 0.22362, 100);
-G2L["2"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-G2L["2"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["2"]["Name"] = [[Main]];
-G2L["2"]["BackgroundTransparency"] = 0.05;
+G2L.Main = Instance.new("Frame", G2L.ScreenGui);
+G2L.Main.ZIndex = 2;
+G2L.Main.BorderSizePixel = 0;
+G2L.Main.BackgroundColor3 = Color3.fromRGB(40, 40, 40);
+G2L.Main.AnchorPoint = Vector2.new(0.5, 0.5);
+G2L.Main.Size = UDim2.new(0.25337, 100, 0.22362, 100);
+G2L.Main.Position = UDim2.new(0.5, 0, 0.5, 0);
+G2L.Main.BorderColor3 = Color3.fromRGB(0, 0, 0);
+G2L.Main.Name = "Main";
+G2L.Main.BackgroundTransparency = 0.05;
 
 
--- StarterGui.TrezChat.Main.Main
-G2L["3"] = Instance.new("LocalScript", G2L["2"]);
-G2L["3"]["Name"] = [[Main]];
+-- StarterGui.TrezChat.Main.Main (Script)
+G2L.MainScript = Instance.new("LocalScript", G2L.Main);
+G2L.MainScript.Name = "Main";
 
 
 -- StarterGui.TrezChat.Main.UIDrag
-G2L["4"] = Instance.new("LocalScript", G2L["2"]);
-G2L["4"]["Name"] = [[UIDrag]];
+G2L.UIDragScript = Instance.new("LocalScript", G2L.Main);
+G2L.UIDragScript.Name = "UIDrag";
 
 
 -- StarterGui.TrezChat.Main.Line
-G2L["5"] = Instance.new("Frame", G2L["2"]);
-G2L["5"]["ZIndex"] = 2;
-G2L["5"]["BorderSizePixel"] = 0;
-G2L["5"]["BackgroundColor3"] = Color3.fromRGB(255, 141, 0);
-G2L["5"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-G2L["5"]["Size"] = UDim2.new(0.01, 267, 0, 1);
-G2L["5"]["Position"] = UDim2.new(0.5, 0, 0.15, 0);
-G2L["5"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["5"]["Name"] = [[Line]];
+G2L.Line = Instance.new("Frame", G2L.Main);
+G2L.Line.ZIndex = 2;
+G2L.Line.BorderSizePixel = 0;
+G2L.Line.BackgroundColor3 = Color3.fromRGB(255, 141, 0);
+G2L.Line.AnchorPoint = Vector2.new(0.5, 0.5);
+G2L.Line.Size = UDim2.new(0.01, 267, 0, 1);
+G2L.Line.Position = UDim2.new(0.5, 0, 0.15, 0);
+G2L.Line.BorderColor3 = Color3.fromRGB(0, 0, 0);
+G2L.Line.Name = "Line";
 
 
 -- StarterGui.TrezChat.Main.Shadow
-G2L["6"] = Instance.new("Frame", G2L["2"]);
-G2L["6"]["ZIndex"] = 2;
-G2L["6"]["BorderSizePixel"] = 0;
-G2L["6"]["BackgroundColor3"] = Color3.fromRGB(255, 141, 0);
-G2L["6"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-G2L["6"]["Size"] = UDim2.new(0.653, 100, 0.434, 100);
-G2L["6"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
-G2L["6"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["6"]["Name"] = [[Shadow]];
-G2L["6"]["BackgroundTransparency"] = 0.55;
+G2L.Shadow = Instance.new("Frame", G2L.Main);
+G2L.Shadow.ZIndex = 2;
+G2L.Shadow.BorderSizePixel = 0;
+G2L.Shadow.BackgroundColor3 = Color3.fromRGB(255, 141, 0);
+G2L.Shadow.AnchorPoint = Vector2.new(0.5, 0.5);
+G2L.Shadow.Size = UDim2.new(0.653, 100, 0.434, 100);
+G2L.Shadow.Position = UDim2.new(0.5, 0, 0.5, 0);
+G2L.Shadow.BorderColor3 = Color3.fromRGB(0, 0, 0);
+G2L.Shadow.Name = "Shadow";
+G2L.Shadow.BackgroundTransparency = 0.55;
 
 
 -- StarterGui.TrezChat.Main.Shadow.UIGradient
-G2L["7"] = Instance.new("UIGradient", G2L["6"]);
-G2L["7"]["Rotation"] = -90;
-G2L["7"]["Transparency"] = NumberSequence.new{NumberSequenceKeypoint.new(0.000, 0.2625),NumberSequenceKeypoint.new(0.174, 0.7375),NumberSequenceKeypoint.new(0.357, 0.925),NumberSequenceKeypoint.new(1.000, 1)};
+G2L.ShadowGradient = Instance.new("UIGradient", G2L.Shadow);
+G2L.ShadowGradient.Rotation = -90;
+G2L.ShadowGradient.Transparency = NumberSequence.new{NumberSequenceKeypoint.new(0.000, 0.2625),NumberSequenceKeypoint.new(0.174, 0.7375),NumberSequenceKeypoint.new(0.357, 0.925),NumberSequenceKeypoint.new(1.000, 1)};
 
 
 -- StarterGui.TrezChat.Main.Shadow.UICorner
-G2L["8"] = Instance.new("UICorner", G2L["6"]);
+G2L.ShadowCorner = Instance.new("UICorner", G2L.Shadow);
 
 
 
 -- StarterGui.TrezChat.Main.UIStroke
-G2L["9"] = Instance.new("UIStroke", G2L["2"]);
-G2L["9"]["Color"] = Color3.fromRGB(255, 145, 10);
+G2L.MainStroke = Instance.new("UIStroke", G2L.Main);
+G2L.MainStroke.Color = Color3.fromRGB(255, 145, 10);
 
 
 -- StarterGui.TrezChat.Main.Bg
-G2L["a"] = Instance.new("ImageLabel", G2L["2"]);
-G2L["a"]["BorderSizePixel"] = 0;
-G2L["a"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["a"]["ImageTransparency"] = 0.86;
-G2L["a"]["ImageColor3"] = Color3.fromRGB(255, 141, 0);
-G2L["a"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-G2L["a"]["Image"] = [[rbxassetid://15175796726]];
-G2L["a"]["Size"] = UDim2.new(0.643, 100, 0.394, 100);
-G2L["a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["a"]["BackgroundTransparency"] = 1;
-G2L["a"]["Name"] = [[Bg]];
-G2L["a"]["Position"] = UDim2.new(0.5, 0, 0.5, 0);
+G2L.Background = Instance.new("ImageLabel", G2L.Main);
+G2L.Background.BorderSizePixel = 0;
+G2L.Background.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
+G2L.Background.ImageTransparency = 0.86;
+G2L.Background.ImageColor3 = Color3.fromRGB(255, 141, 0);
+G2L.Background.AnchorPoint = Vector2.new(0.5, 0.5);
+G2L.Background.Image = "rbxassetid://15175796726";
+G2L.Background.Size = UDim2.new(0.643, 100, 0.394, 100);
+G2L.Background.BorderColor3 = Color3.fromRGB(0, 0, 0);
+G2L.Background.BackgroundTransparency = 1;
+G2L.Background.Name = "Bg";
+G2L.Background.Position = UDim2.new(0.5, 0, 0.5, 0);
 
 
 -- StarterGui.TrezChat.Main.Bg.UICorner
-G2L["b"] = Instance.new("UICorner", G2L["a"]);
+G2L.BackgroundCorner = Instance.new("UICorner", G2L.Background);
 
 
 
 -- StarterGui.TrezChat.Main.SourceChat
-G2L["c"] = Instance.new("TextBox", G2L["2"]);
-G2L["c"]["Name"] = [[SourceChat]];
-G2L["c"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-G2L["c"]["ZIndex"] = 3;
-G2L["c"]["BorderSizePixel"] = 0;
-G2L["c"]["TextWrapped"] = true;
-G2L["c"]["TextSize"] = 14;
-G2L["c"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["c"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["c"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-G2L["c"]["Size"] = UDim2.new(0, 224, 0.01, 16);
-G2L["c"]["Position"] = UDim2.new(0.02446, 0, 0.85934, 0);
-G2L["c"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["c"]["Text"] = [[]];
-G2L["c"]["PlaceholderText"] = "Send your message here..."
-G2L["c"]["BackgroundTransparency"] = 0.3;
+G2L.SourceChat = Instance.new("TextBox", G2L.Main);
+G2L.SourceChat.Name = "SourceChat";
+G2L.SourceChat.TextXAlignment = Enum.TextXAlignment.Left;
+G2L.SourceChat.ZIndex = 3;
+G2L.SourceChat.BorderSizePixel = 0;
+G2L.SourceChat.TextWrapped = true;
+G2L.SourceChat.TextSize = 14;
+G2L.SourceChat.TextColor3 = Color3.fromRGB(255, 255, 255);
+G2L.SourceChat.BackgroundColor3 = Color3.fromRGB(0, 0, 0);
+G2L.SourceChat.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+G2L.SourceChat.Size = UDim2.new(0, 224, 0.01, 16);
+G2L.SourceChat.Position = UDim2.new(0.02446, 0, 0.85934, 0);
+G2L.SourceChat.BorderColor3 = Color3.fromRGB(0, 0, 0);
+G2L.SourceChat.Text = "";
+G2L.SourceChat.PlaceholderText = "Send your message here...";
+G2L.SourceChat.BackgroundTransparency = 0.3;
 
 
 -- StarterGui.TrezChat.Main.SourceChat.UICorner
-G2L["d"] = Instance.new("UICorner", G2L["c"]);
-G2L["d"]["CornerRadius"] = UDim.new(0, 4);
+G2L.SourceChatCorner = Instance.new("UICorner", G2L.SourceChat);
+G2L.SourceChatCorner.CornerRadius = UDim.new(0, 4);
 
 
 -- StarterGui.TrezChat.Main.SourceChat.UIPadding
-G2L["e"] = Instance.new("UIPadding", G2L["c"]);
-G2L["e"]["PaddingLeft"] = UDim.new(0, 5);
+G2L.SourceChatPadding = Instance.new("UIPadding", G2L.SourceChat);
+G2L.SourceChatPadding.PaddingLeft = UDim.new(0, 5);
 
 
 -- StarterGui.TrezChat.Main.UICorner
-G2L["f"] = Instance.new("UICorner", G2L["2"]);
+G2L.MainCorner = Instance.new("UICorner", G2L.Main);
 
 
 
 -- StarterGui.TrezChat.Main.SendAsync
-G2L["10"] = Instance.new("ImageButton", G2L["2"]);
-G2L["10"]["BorderSizePixel"] = 0;
-G2L["10"]["BackgroundTransparency"] = 1;
-G2L["10"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["10"]["ImageColor3"] = Color3.fromRGB(255, 141, 0);
-G2L["10"]["ZIndex"] = 3;
-G2L["10"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-G2L["10"]["Image"] = [[rbxassetid://18940312887]];
-G2L["10"]["Size"] = UDim2.new(0.01, 30, 0.02, 14);
-G2L["10"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["10"]["Name"] = [[SendAsync]];
-G2L["10"]["Position"] = UDim2.new(0.894, 0, 0.909, 0);
+G2L.SendButton = Instance.new("ImageButton", G2L.Main);
+G2L.SendButton.BorderSizePixel = 0;
+G2L.SendButton.BackgroundTransparency = 1;
+G2L.SendButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
+G2L.SendButton.ImageColor3 = Color3.fromRGB(255, 141, 0);
+G2L.SendButton.ZIndex = 3;
+G2L.SendButton.AnchorPoint = Vector2.new(0.5, 0.5);
+G2L.SendButton.Image = "rbxassetid://18940312887";
+G2L.SendButton.Size = UDim2.new(0.01, 30, 0.02, 14);
+G2L.SendButton.BorderColor3 = Color3.fromRGB(0, 0, 0);
+G2L.SendButton.Name = "SendAsync";
+G2L.SendButton.Position = UDim2.new(0.894, 0, 0.909, 0);
 
 
 -- StarterGui.TrezChat.Main.SendAsync.UIAspectRatioConstraint
-G2L["11"] = Instance.new("UIAspectRatioConstraint", G2L["10"]);
+G2L.SendButtonAspect = Instance.new("UIAspectRatioConstraint", G2L.SendButton);
 
 
 
 -- StarterGui.TrezChat.Main.TextLabel
-G2L["12"] = Instance.new("TextLabel", G2L["2"]);
-G2L["12"]["TextWrapped"] = true;
-G2L["12"]["BorderSizePixel"] = 0;
-G2L["12"]["TextSize"] = 19;
-G2L["12"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-G2L["12"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["12"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Regular, Enum.FontStyle.Normal);
-G2L["12"]["TextColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["12"]["BackgroundTransparency"] = 1;
-G2L["12"]["RichText"] = true;
-G2L["12"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-G2L["12"]["Size"] = UDim2.new(0.16, 200, -0.22, 50);
-G2L["12"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["12"]["Text"] = [[<font color = 'rgb(242, 111, 2)'><font face='Arial'>Trez</font></font> <font color = 'rgb(255, 255, 255)'>Chat V1</font>]];
-G2L["12"]["Position"] = UDim2.new(0.46, 0, 0.08, 0);
+G2L.TitleLabel = Instance.new("TextLabel", G2L.Main);
+G2L.TitleLabel.TextWrapped = true;
+G2L.TitleLabel.BorderSizePixel = 0;
+G2L.TitleLabel.TextSize = 19;
+G2L.TitleLabel.TextXAlignment = Enum.TextXAlignment.Left;
+G2L.TitleLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
+G2L.TitleLabel.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal);
+G2L.TitleLabel.TextColor3 = Color3.fromRGB(0, 0, 0);
+G2L.TitleLabel.BackgroundTransparency = 1;
+G2L.TitleLabel.RichText = true;
+G2L.TitleLabel.AnchorPoint = Vector2.new(0.5, 0.5);
+G2L.TitleLabel.Size = UDim2.new(0.16, 200, -0.22, 50);
+G2L.TitleLabel.BorderColor3 = Color3.fromRGB(0, 0, 0);
+G2L.TitleLabel.Text = "<font color = 'rgb(242, 111, 2)'><font face='Arial'>Trez</font></font> <font color = 'rgb(255, 255, 255)'>Chat V1</font>";
+G2L.TitleLabel.Position = UDim2.new(0.46, 0, 0.08, 0);
 
 
 -- StarterGui.TrezChat.Main.ChatHistory
-G2L["13"] = Instance.new("ScrollingFrame", G2L["2"]);
-G2L["13"]["Active"] = true;
-G2L["13"]["ZIndex"] = 3;
-G2L["13"]["BorderSizePixel"] = 0;
--- [ERROR] cannot convert TopImageContent, please report to "https://github.com/uniquadev/GuiToLuaConverter/issues"
-G2L["13"]["TopImage"] = [[rbxasset://textures/ui/Scroll/scroll-middle.png]];
-G2L["13"]["Name"] = [[ChatHistory]];
-G2L["13"]["BackgroundColor3"] = Color3.fromRGB(0, 0, 0);
--- [ERROR] cannot convert BottomImageContent, please report to "https://github.com/uniquadev/GuiToLuaConverter/issues"
-G2L["13"]["BottomImage"] = [[rbxasset://textures/ui/Scroll/scroll-middle.png]];
-G2L["13"]["Size"] = UDim2.new(0, 270, 0.01, 107);
-G2L["13"]["ScrollBarImageColor3"] = Color3.fromRGB(255, 141, 0);
-G2L["13"]["Position"] = UDim2.new(0.02795, 0, 0.18188, 0);
-G2L["13"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["13"]["ScrollBarThickness"] = 3;
-G2L["13"]["BackgroundTransparency"] = 0.65;
+G2L.ChatHistory = Instance.new("ScrollingFrame", G2L.Main);
+G2L.ChatHistory.Active = true;
+G2L.ChatHistory.ZIndex = 3;
+G2L.ChatHistory.BorderSizePixel = 0;
+G2L.ChatHistory.TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png";
+G2L.ChatHistory.Name = "ChatHistory";
+G2L.ChatHistory.BackgroundColor3 = Color3.fromRGB(0, 0, 0);
+G2L.ChatHistory.BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png";
+G2L.ChatHistory.Size = UDim2.new(0, 270, 0.01, 107);
+G2L.ChatHistory.ScrollBarImageColor3 = Color3.fromRGB(255, 141, 0);
+G2L.ChatHistory.Position = UDim2.new(0.02795, 0, 0.18188, 0);
+G2L.ChatHistory.BorderColor3 = Color3.fromRGB(0, 0, 0);
+G2L.ChatHistory.ScrollBarThickness = 3;
+G2L.ChatHistory.BackgroundTransparency = 0.65;
 
 
 -- StarterGui.TrezChat.Main.ChatHistory.UICanva
-G2L["14"] = Instance.new("LocalScript", G2L["13"]);
-G2L["14"]["Name"] = [[UICanva]];
+G2L.CanvasScript = Instance.new("LocalScript", G2L.ChatHistory);
+G2L.CanvasScript.Name = "UICanva";
 
 
 -- StarterGui.TrezChat.Main.ChatHistory.UIListLayout
-G2L["15"] = Instance.new("UIListLayout", G2L["13"]);
-G2L["15"]["Padding"] = UDim.new(0, 3);
-G2L["15"]["SortOrder"] = Enum.SortOrder.LayoutOrder;
+G2L.ChatLayout = Instance.new("UIListLayout", G2L.ChatHistory);
+G2L.ChatLayout.Padding = UDim.new(0, 3);
+G2L.ChatLayout.SortOrder = Enum.SortOrder.LayoutOrder;
 
 
 -- StarterGui.TrezChat.Main.ChatHistory.ChatExample
-G2L["16"] = Instance.new("Frame", G2L["13"]);
-G2L["16"]["ZIndex"] = 3;
-G2L["16"]["BorderSizePixel"] = 0;
-G2L["16"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["16"]["Size"] = UDim2.new(0, 256, 0, 29);
-G2L["16"]["Position"] = UDim2.new(0, 0, 0, 0);
-G2L["16"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["16"]["Name"] = [[ChatExample]];
-G2L["16"]["BackgroundTransparency"] = 1;
+G2L.ChatTemplate = Instance.new("Frame", G2L.ChatHistory);
+G2L.ChatTemplate.ZIndex = 3;
+G2L.ChatTemplate.BorderSizePixel = 0;
+G2L.ChatTemplate.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
+G2L.ChatTemplate.Size = UDim2.new(0, 256, 0, 29);
+G2L.ChatTemplate.Position = UDim2.new(0, 0, 0, 0);
+G2L.ChatTemplate.BorderColor3 = Color3.fromRGB(0, 0, 0);
+G2L.ChatTemplate.Name = "ChatExample";
+G2L.ChatTemplate.BackgroundTransparency = 1;
 
 
 -- StarterGui.TrezChat.Main.ChatHistory.ChatExample.PlayerIcon
-G2L["17"] = Instance.new("ImageLabel", G2L["16"]);
-G2L["17"]["ZIndex"] = 4;
-G2L["17"]["BorderSizePixel"] = 0;
-G2L["17"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["17"]["Image"] = [[rbxasset://textures/ui/GuiImagePlaceholder.png]];
-G2L["17"]["Size"] = UDim2.new(0, 60, 0, 29);
-G2L["17"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["17"]["BackgroundTransparency"] = 1;
-G2L["17"]["Name"] = [[PlayerIcon]];
+G2L.PlayerIcon = Instance.new("ImageLabel", G2L.ChatTemplate);
+G2L.PlayerIcon.ZIndex = 4;
+G2L.PlayerIcon.BorderSizePixel = 0;
+G2L.PlayerIcon.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
+G2L.PlayerIcon.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png";
+G2L.PlayerIcon.Size = UDim2.new(0, 60, 0, 29);
+G2L.PlayerIcon.BorderColor3 = Color3.fromRGB(0, 0, 0);
+G2L.PlayerIcon.BackgroundTransparency = 1;
+G2L.PlayerIcon.Name = "PlayerIcon";
 
 
 -- StarterGui.TrezChat.Main.ChatHistory.ChatExample.PlayerIcon.UIAspectRatioConstraint
-G2L["18"] = Instance.new("UIAspectRatioConstraint", G2L["17"]);
+G2L.PlayerIconAspect = Instance.new("UIAspectRatioConstraint", G2L.PlayerIcon);
 
 
 
 -- StarterGui.TrezChat.Main.ChatHistory.ChatExample.MessageSource
-G2L["19"] = Instance.new("TextLabel", G2L["16"]);
-G2L["19"]["TextWrapped"] = true;
-G2L["19"]["ZIndex"] = 4;
-G2L["19"]["BorderSizePixel"] = 0;
-G2L["19"]["TextSize"] = 14;
-G2L["19"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-G2L["19"]["TextScaled"] = true;
-G2L["19"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["19"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
-G2L["19"]["TextColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["19"]["BackgroundTransparency"] = 1;
-G2L["19"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-G2L["19"]["Size"] = UDim2.new(-0.16, 234, 0.07044, 14);
-G2L["19"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["19"]["Text"] = [[yo chat the 67 meme is still massive woww]];
-G2L["19"]["Name"] = [[MessageSource]];
-G2L["19"]["Position"] = UDim2.new(0.51, 0, 0.69978, 0);
+G2L.MessageLabel = Instance.new("TextLabel", G2L.ChatTemplate);
+G2L.MessageLabel.TextWrapped = true;
+G2L.MessageLabel.ZIndex = 4;
+G2L.MessageLabel.BorderSizePixel = 0;
+G2L.MessageLabel.TextSize = 14;
+G2L.MessageLabel.TextXAlignment = Enum.TextXAlignment.Left;
+G2L.MessageLabel.TextScaled = true;
+G2L.MessageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
+G2L.MessageLabel.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal);
+G2L.MessageLabel.TextColor3 = Color3.fromRGB(255, 255, 255);
+G2L.MessageLabel.BackgroundTransparency = 1;
+G2L.MessageLabel.AnchorPoint = Vector2.new(0.5, 0.5);
+G2L.MessageLabel.Size = UDim2.new(-0.16, 234, 0.07044, 14);
+G2L.MessageLabel.BorderColor3 = Color3.fromRGB(0, 0, 0);
+G2L.MessageLabel.Text = "yo chat the 67 meme is still massive woww";
+G2L.MessageLabel.Name = "MessageSource";
+G2L.MessageLabel.Position = UDim2.new(0.51, 0, 0.69978, 0);
 
 
 -- StarterGui.TrezChat.Main.ChatHistory.ChatExample.Sender
-G2L["1a"] = Instance.new("TextLabel", G2L["16"]);
-G2L["1a"]["ZIndex"] = 4;
-G2L["1a"]["BorderSizePixel"] = 0;
-G2L["1a"]["TextSize"] = 15;
-G2L["1a"]["TextXAlignment"] = Enum.TextXAlignment.Left;
-G2L["1a"]["BackgroundColor3"] = Color3.fromRGB(255, 255, 255);
-G2L["1a"]["FontFace"] = Font.new([[rbxasset://fonts/families/SourceSansPro.json]], Enum.FontWeight.Bold, Enum.FontStyle.Normal);
-G2L["1a"]["TextColor3"] = Color3.fromRGB(255, 129, 0);
-G2L["1a"]["BackgroundTransparency"] = 1;
-G2L["1a"]["AnchorPoint"] = Vector2.new(0.5, 0.5);
-G2L["1a"]["Size"] = UDim2.new(-0.51033, 234, -0.14276, 14);
-G2L["1a"]["BorderColor3"] = Color3.fromRGB(0, 0, 0);
-G2L["1a"]["Text"] = [[C00lHamo0t2025]];
-G2L["1a"]["Name"] = [[Sender]];
-G2L["1a"]["Position"] = UDim2.new(0.33983, 0, 0.31819, 0);
-
-
-
+G2L.SenderLabel = Instance.new("TextLabel", G2L.ChatTemplate);
+G2L.SenderLabel.ZIndex = 4;
+G2L.SenderLabel.BorderSizePixel = 0;
+G2L.SenderLabel.TextSize = 15;
+G2L.SenderLabel.TextXAlignment = Enum.TextXAlignment.Left;
+G2L.SenderLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255);
+G2L.SenderLabel.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal);
+G2L.SenderLabel.TextColor3 = Color3.fromRGB(255, 129, 0);
+G2L.SenderLabel.BackgroundTransparency = 1;
+G2L.SenderLabel.AnchorPoint = Vector2.new(0.5, 0.5);
+G2L.SenderLabel.Size = UDim2.new(-0.51033, 234, -0.14276, 14);
+G2L.SenderLabel.BorderColor3 = Color3.fromRGB(0, 0, 0);
+G2L.SenderLabel.Text = "C00lHamo0t2025";
+G2L.SenderLabel.Name = "Sender";
+G2L.SenderLabel.Position = UDim2.new(0.33983, 0, 0.31819, 0);
 
 
 -- StarterGui.TrezChat.Main.ChatHistory.UIPadding
-G2L["1b"] = Instance.new("UIPadding", G2L["13"]);
-G2L["1b"]["PaddingTop"] = UDim.new(0, 5);
-G2L["1b"]["PaddingLeft"] = UDim.new(0, 5);
+G2L.ChatPadding = Instance.new("UIPadding", G2L.ChatHistory);
+G2L.ChatPadding.PaddingTop = UDim.new(0, 5);
+G2L.ChatPadding.PaddingLeft = UDim.new(0, 5);
 
 
--- StarterGui.TrezChat.Main.Main
-local function C_3()
-local script = G2L["3"];
-	local NoticeSound = Instance.new("Sound", G2L["1"])
+-- StarterGui.TrezChat.Main.Main Script
+local function MainFunction()
+	local script = G2L.MainScript;
+	local NoticeSound = Instance.new("Sound", G2L.ScreenGui)
 	NoticeSound.SoundId = "rbxassetid://2865226708"
 	NoticeSound.Name = "NoticeReciveSound"
-	local SendSound = Instance.new("Sound", G2L["1"])
+	local SendSound = Instance.new("Sound", G2L.ScreenGui)
 	SendSound.SoundId = "rbxassetid://5485567028"
 	SendSound.Name = "SendSound"
 	local Main = script.Parent
@@ -540,11 +535,12 @@ local script = G2L["3"];
 		
 	end
 end;
-task.spawn(C_3);
+task.spawn(MainFunction);
+
 -- StarterGui.TrezChat.Main.UIDrag
-local function C_4()
-local script = G2L["4"];
-	local UIS = game:GetService('UserInputService')
+local function UIDragFunction()
+	local script = G2L.UIDragScript;
+	local UIS = game:GetService("UserInputService")
 	local frame = script.Parent
 	local dragToggle = nil
 	local dragSpeed = 0.25
@@ -555,7 +551,7 @@ local script = G2L["4"];
 		local delta = input.Position - dragStart
 		local position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
 			startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-		game:GetService('TweenService'):Create(frame, TweenInfo.new(dragSpeed), {Position = position}):Play()
+		game:GetService("TweenService"):Create(frame, TweenInfo.new(dragSpeed), {Position = position}):Play()
 	end
 	
 	frame.InputBegan:Connect(function(input)
@@ -579,10 +575,11 @@ local script = G2L["4"];
 		end
 	end)
 end;
-task.spawn(C_4);
+task.spawn(UIDragFunction);
+
 -- StarterGui.TrezChat.Main.ChatHistory.UICanva
-local function C_14()
-local script = G2L["14"];
+local function CanvasFunction()
+	local script = G2L.CanvasScript;
 	local Frame = script.Parent.ChatExample
 	local ChatHistory = script.Parent
 	local Layout = script.Parent.UIListLayout
@@ -595,6 +592,6 @@ local script = G2L["14"];
 	
 	Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(Update)
 end;
-task.spawn(C_14);
+task.spawn(CanvasFunction);
 
-return G2L["1"], require;
+return G2L.ScreenGui, require;
