@@ -362,7 +362,7 @@ local function MainFunction()
     getgenv().trezchat = WebSocket.connect("wss://free.blr2.piesocket.com/v3/1?api_key=eLudeCBiiTiQSr6DWJPMPfpZK9B6ghEu90ZbJwzm&notify_self=1")
     
     local DeveloperList = {
-        "Deluxe_Studios",
+        "Deluxe_Studio",
         "Roun95"
     }
     
