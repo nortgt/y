@@ -1,0 +1,676 @@
+-- Services
+local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+
+-- Singleton Check
+if getgenv().GeminiChatLoaded then
+    if getgenv().GeminiChatUnload then
+        getgenv().GeminiChatUnload()
+    end
+end
+getgenv().GeminiChatLoaded = true
+
+-- Generation State
+local IsGenerating = false
+local StopGeneration = false
+
+-- Configuration
+local Config = {
+    ApiKey = "",
+    Model = "gemini-3-flash-preview", -- Reverted
+    History = {}
+}
+
+print("[Gemini AI] Loading UI...")
+
+-- Theme & Design System (ChatGPT-like)
+local Theme = {
+    Background = Color3.fromRGB(52, 53, 65),       -- Main Chat Background
+    Sidebar = Color3.fromRGB(32, 33, 35),          -- Sidebar/Header
+    InputBG = Color3.fromRGB(64, 65, 79),          -- Input Field
+    UserBubble = Color3.fromRGB(32, 33, 35),       -- User Bubble (Darker)
+    AIBubble = Color3.fromRGB(68, 70, 84),         -- AI Bubble (Contrast)
+    TextPrimary = Color3.fromRGB(236, 236, 241),   -- Main Text
+    TextSecondary = Color3.fromRGB(142, 142, 160), -- Subtitles/Placeholders
+    Accent = Color3.fromRGB(16, 163, 127),         -- ChatGPT Green
+    CodeBlock = Color3.black,                      -- Code Block BG
+    Scrollbar = Color3.fromRGB(86, 88, 105),
+    Radius = UDim.new(0, 6)
+}
+
+local function MarkdownToRichText(text)
+    -- Escaping
+    text = text:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;"):gsub("\"", "&quot;"):gsub("'", "&apos;")
+    
+    -- Bold **text** or __text__
+    text = text:gsub("%*%*(.-)%*%*", "<b>%1</b>")
+    text = text:gsub("__(.-)__", "<b>%1</b>")
+    
+    -- Italic *text* or _text_
+    text = text:gsub("%*(.-)%*", "<i>%1</i>")
+    text = text:gsub("_(.-)_", "<i>%1</i>")
+    
+    -- Headers ### Text (Line aware)
+    text = text:gsub("(\n?)###%s*(.-)(\n?)", "%1<font size=\"18\"><b>%2</b></font>%3")
+    text = text:gsub("(\n?)##%s*(.-)(\n?)", "%1<font size=\"20\"><b>%2</b></font>%3")
+    text = text:gsub("(\n?)#%s*(.-)(\n?)", "%1<font size=\"22\"><b>%2</b></font>%3")
+    
+    -- Bullet points
+    text = text:gsub("\n%* ", "\n  • ")
+    text = text:gsub("^%* ", "  • ")
+    
+    return text
+end
+
+local function Typewrite(label, text, speed)
+    label.Text = ""
+    local displayed = ""
+    
+    -- UTF-8 safe iteration
+    for _, code in utf8.codes(text) do
+        if StopGeneration then break end
+        displayed = displayed .. utf8.char(code)
+        label.Text = displayed
+        
+        -- Auto-scroll
+        if ChatScroll then
+            ChatScroll.CanvasPosition = Vector2.new(0, ChatScroll.AbsoluteCanvasSize.Y)
+        end
+        
+        -- Speed control (approximate)
+        if speed and speed > 0 then
+            task.wait(speed)
+        else
+            task.wait(0.005)
+        end
+    end
+    
+    label.Text = text -- Ensure it's fully set
+end
+
+-- Utility Functions
+local function Create(className, properties, children)
+    local instance = Instance.new(className)
+    for k, v in pairs(properties or {}) do
+        instance[k] = v
+    end
+    if children then
+        for _, child in ipairs(children) do
+            child.Parent = instance
+        end
+    end
+    return instance
+end
+
+local function Tween(instance, info, goals)
+    local tween = TweenService:Create(instance, info, goals)
+    tween:Play()
+    return tween
+end
+
+local function GetTextSize(text, font, fontSize, maxWidth)
+    return game:GetService("TextService"):GetTextSize(text, fontSize, font, Vector2.new(maxWidth, 10000))
+end
+
+-- UI Construction
+local ScreenGui = Create("ScreenGui", {
+    Name = "GeminiChatUI",
+    Parent = (RunService:IsStudio() and Players.LocalPlayer:WaitForChild("PlayerGui")) or CoreGui,
+    ResetOnSpawn = false,
+    ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+})
+
+local MainFrame = Create("Frame", {
+    Name = "MainFrame",
+    Parent = ScreenGui,
+    BackgroundColor3 = Theme.Background,
+    Size = UDim2.fromOffset(500, 700),
+    Position = UDim2.new(0.5, 0, 0.5, -350), -- Centered top
+    AnchorPoint = Vector2.new(0.5, 0), -- Anchor to TOP
+    BorderSizePixel = 0,
+    ClipsDescendants = true
+}, {
+    Create("UICorner", { CornerRadius = Theme.Radius }),
+    Create("UIStroke", { Color = Color3.fromRGB(80, 80, 80), Thickness = 1, Transparency = 0.5 })
+})
+
+-- Dragging Logic
+local Dragging, DragInput, DragStart, StartPos
+-- Forward Declare for Minimize
+local ChatScroll, InputContainer
+
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        Dragging = true
+        DragStart = input.Position
+        StartPos = MainFrame.Position
+        
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                Dragging = false
+            end
+        end)
+    end
+end)
+
+MainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        DragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == DragInput and Dragging then
+        local delta = input.Position - DragStart
+        Tween(MainFrame, TweenInfo.new(0.1), {
+            Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + delta.X, StartPos.Y.Scale, StartPos.Y.Offset + delta.Y)
+        })
+    end
+end)
+
+-- Header
+local Header = Create("Frame", {
+    Name = "Header",
+    Parent = MainFrame,
+    Size = UDim2.new(1, 0, 0, 50),
+    BackgroundColor3 = Theme.Sidebar,
+    BorderSizePixel = 0
+}, {
+    Create("TextLabel", {
+        Text = "Gemini AI",
+        TextColor3 = Theme.TextPrimary,
+        Font = Enum.Font.GothamBold,
+        TextSize = 18,
+        Size = UDim2.fromScale(1, 1),
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(15, 0),
+        TextXAlignment = Enum.TextXAlignment.Left
+    }),
+    Create("UICorner", { CornerRadius = UDim.new(0, 6) }), -- Rounded top (visual fix handled by Frame clipping)
+    Create("Frame", { -- Bottom border fix for rounded header
+        Size = UDim2.new(1, 0, 0, 5),
+        Position = UDim2.new(0, 0, 1, -5),
+        BackgroundColor3 = Theme.Sidebar,
+        BorderSizePixel = 0
+    }) 
+})
+
+-- Close Button
+local CloseBtn = Create("TextButton", {
+    Parent = Header,
+    Text = "×",
+    TextColor3 = Theme.TextSecondary,
+    Font = Enum.Font.Gotham,
+    TextSize = 24,
+    BackgroundTransparency = 1,
+    Size = UDim2.fromOffset(40, 40),
+    Position = UDim2.new(1, -45, 0.5, -20),
+    AutoButtonColor = false
+})
+
+CloseBtn.MouseEnter:Connect(function() Tween(CloseBtn, TweenInfo.new(0.2), {TextColor3 = Color3.new(1, 0.3, 0.3)}) end)
+CloseBtn.MouseLeave:Connect(function() Tween(CloseBtn, TweenInfo.new(0.2), {TextColor3 = Theme.TextSecondary}) end)
+CloseBtn.MouseButton1Click:Connect(function() 
+    getgenv().GeminiChatUnload() 
+end)
+
+-- Minimize Button
+local Minimized = false
+local MinimizeBtn = Create("TextButton", {
+    Parent = Header,
+    Text = "-",
+    TextColor3 = Theme.TextSecondary,
+    Font = Enum.Font.Gotham,
+    TextSize = 24,
+    BackgroundTransparency = 1,
+    Size = UDim2.fromOffset(40, 40),
+    Position = UDim2.new(1, -85, 0.5, -20),
+    AutoButtonColor = false
+})
+
+MinimizeBtn.MouseEnter:Connect(function() Tween(MinimizeBtn, TweenInfo.new(0.2), {TextColor3 = Theme.Accent}) end)
+MinimizeBtn.MouseLeave:Connect(function() Tween(MinimizeBtn, TweenInfo.new(0.2), {TextColor3 = Theme.TextSecondary}) end)
+
+MinimizeBtn.MouseButton1Click:Connect(function()
+    Minimized = not Minimized
+    local targetSize = Minimized and UDim2.fromOffset(500, 50) or UDim2.fromOffset(500, 700)
+    Tween(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = targetSize})
+    
+    -- Delay visibility for smooth clipping effect or just toggle
+    if not Minimized then
+        ChatScroll.Visible = true
+        InputContainer.Visible = true
+        MinimizeBtn.Text = "-"
+    else
+        MinimizeBtn.Text = "+"
+        task.delay(0.2, function()
+            if Minimized then
+                ChatScroll.Visible = false
+                InputContainer.Visible = false
+            end
+        end)
+    end
+end)
+
+-- Visibility Toggle (Left Control)
+local Hidden = false
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == Enum.KeyCode.LeftControl then
+        Hidden = not Hidden
+        ScreenGui.Enabled = not Hidden
+    end
+end)
+
+-- Scroll Container for content
+ChatScroll = Create("ScrollingFrame", {
+    Parent = MainFrame,
+    Size = UDim2.new(1, 0, 1, -135), -- Adjusted for 50px header + 80px input + padding
+    Position = UDim2.new(0, 0, 0, 50),
+    BackgroundTransparency = 1,
+    ScrollBarThickness = 6,
+    ScrollBarImageColor3 = Theme.Scrollbar,
+    CanvasSize = UDim2.new(0, 0, 0, 0),
+    AutomaticCanvasSize = Enum.AutomaticSize.Y
+}, {
+    Create("UIListLayout", {
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Padding = UDim.new(0, 15),
+        HorizontalAlignment = Enum.HorizontalAlignment.Center
+    }),
+    Create("UIPadding", {
+        PaddingTop = UDim.new(0, 10),
+        PaddingBottom = UDim.new(0, 15), -- Slightly more padding at bottom
+        PaddingLeft = UDim.new(0, 10),
+        PaddingRight = UDim.new(0, 10)
+    })
+})
+
+-- Input Area Redesign
+InputContainer = Create("Frame", {
+    Parent = MainFrame,
+    Size = UDim2.new(1, 0, 0, 80),
+    Position = UDim2.new(0, 0, 1, -80),
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0
+})
+
+local Pill = Create("Frame", {
+    Parent = InputContainer,
+    Size = UDim2.new(1, -30, 0, 50),
+    Position = UDim2.new(0.5, 0, 0.5, 0),
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    BackgroundColor3 = Theme.InputBG,
+    BackgroundTransparency = 0.2,
+    BorderSizePixel = 0
+}, {
+    Create("UICorner", { CornerRadius = UDim.new(1, 0) }), -- Oval shape
+    Create("UIStroke", { Color = Color3.fromRGB(255, 255, 255), Transparency = 0.9, Thickness = 1 })
+})
+
+local InputBox = Create("TextBox", {
+    Parent = Pill,
+    Size = UDim2.new(1, -60, 1, 0),
+    Position = UDim2.new(0, 20, 0, 0),
+    BackgroundTransparency = 1,
+    TextColor3 = Theme.TextPrimary,
+    PlaceholderText = "Ask anything...", -- Updated as per image style
+    PlaceholderColor3 = Theme.TextSecondary,
+    Font = Enum.Font.Gotham,
+    TextSize = 14,
+    TextWrapped = true,
+    ClearTextOnFocus = false,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextYAlignment = Enum.TextYAlignment.Center,
+    Text = ""
+})
+
+local SendBtn = Create("ImageButton", {
+    Parent = Pill,
+    Size = UDim2.fromOffset(32, 32),
+    Position = UDim2.new(1, -9, 0.5, 0),
+    AnchorPoint = Vector2.new(1, 0.5),
+    BackgroundTransparency = 1, -- Removed white background
+    Image = "rbxassetid://123749085081505", -- Your provided Send ID
+    ImageColor3 = Color3.fromRGB(255, 255, 255),
+    ScaleType = Enum.ScaleType.Fit,
+    AutoButtonColor = true
+})
+
+local function SetGenerating(state)
+    IsGenerating = state
+    if state then
+        SendBtn.Image = "rbxassetid://109356409844353" -- Your provided Stop ID
+        StopGeneration = false
+    else
+        SendBtn.Image = "rbxassetid://123749085081505" -- Your provided Send ID
+    end
+end
+
+-- Helper to make text selectable/copyable if possible (TextBox read-only trick) or just Label
+-- Roblox TextLabels are not copyable.
+-- We will implement a special rendering for code blocks.
+
+local function ProcessText(text)
+    local parts = {}
+    local pattern = "```(.-)```"
+    local lastPos = 1
+    
+    -- Use find instead of gmatch to get positions correctly
+    local startPos, endPos, code = text:find(pattern, lastPos)
+    
+    while startPos do
+        -- Add preceding text
+        local preText = text:sub(lastPos, startPos - 1)
+        if #preText > 0 then
+            table.insert(parts, {Type = "Text", Content = preText})
+        end
+        
+        -- Add code block (strip language identifier and trim)
+        local cleanCode = code:gsub("^%w+\n", ""):gsub("^%s+", ""):gsub("%s+$", "")
+        table.insert(parts, {Type = "Code", Content = cleanCode})
+        
+        lastPos = endPos + 1
+        startPos, endPos, code = text:find(pattern, lastPos)
+    end
+    
+    -- Add remaining text
+    local remain = text:sub(lastPos)
+    if #remain > 0 then
+        table.insert(parts, {Type = "Text", Content = remain})
+    end
+    
+    if #parts == 0 then table.insert(parts, {Type = "Text", Content = text}) end
+    
+    for _, part in ipairs(parts) do
+        if part.Type == "Text" then
+            part.Content = MarkdownToRichText(part.Content)
+        end
+    end
+    
+    return parts
+end
+
+local function RenderMessage(role, text)
+    local isUser = (role == "User")
+    local bubbleColor = isUser and Theme.UserBubble or Theme.AIBubble
+    
+    -- Container for the whole message row
+    local Row = Create("Frame", {
+        Parent = ChatScroll,
+        Size = UDim2.new(1, 0, 0, 0), -- Automatic size
+        BackgroundTransparency = 1,
+        AutomaticSize = Enum.AutomaticSize.Y
+    })
+    
+    -- Icon / Label Container
+    if isUser then
+        Create("TextLabel", {
+            Parent = Row,
+            Text = "You",
+            TextColor3 = Theme.TextSecondary,
+            Font = Enum.Font.GothamBold,
+            TextSize = 12,
+            Size = UDim2.new(1, -15, 0, 20),
+            Position = UDim2.new(0, 0, 0, 0),
+            BackgroundTransparency = 1,
+            TextXAlignment = Enum.TextXAlignment.Right
+        })
+    else
+        Create("ImageLabel", {
+            Parent = Row,
+            Size = UDim2.fromOffset(30, 30),
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0, 0, 0, 0),
+            Image = "rbxassetid://119604644446321", -- User provided AI icon
+        }, { Create("UICorner", { CornerRadius = UDim.new(0, 4) }) })
+    end
+    
+    -- Content Container (The Bubble)
+    local ContentWidth = 380
+    local Bubble = Create("Frame", {
+        Parent = Row,
+        BackgroundColor3 = bubbleColor,
+        Size = UDim2.new(0, ContentWidth, 0, 0), -- Auto Y
+        Position = isUser and UDim2.new(1, -10, 0, 22) or UDim2.new(0, 40, 0, 0),        
+        AnchorPoint = isUser and Vector2.new(1, 0) or Vector2.new(0, 0),
+        AutomaticSize = Enum.AutomaticSize.Y,
+        BackgroundTransparency = 0
+    }, {
+        Create("UICorner", { CornerRadius = UDim.new(0, 6) }),
+        Create("UIListLayout", {
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Padding = UDim.new(0, 8)
+        }),
+        Create("UIPadding", {
+            PaddingTop = UDim.new(0, 10),
+            PaddingBottom = UDim.new(0, 10),
+            PaddingLeft = UDim.new(0, 12),
+            PaddingRight = UDim.new(0, 12)
+        })
+    })
+    
+    -- Generation Logic
+    task.spawn(function()
+        local parts = ProcessText(text)
+        
+        for _, part in ipairs(parts) do
+            if StopGeneration then break end
+            
+            if part.Type == "Text" then
+                local label = Create("TextLabel", {
+                    Parent = Bubble,
+                    Text = "", 
+                    TextColor3 = Theme.TextPrimary,
+                    Font = Enum.Font.Gotham,
+                    TextSize = 14,
+                    TextWrapped = true,
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 0),
+                    AutomaticSize = Enum.AutomaticSize.Y,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    RichText = true
+                })
+                
+                if isUser then
+                    label.Text = part.Content
+                else
+                    Typewrite(label, part.Content)
+                end
+            elseif part.Type == "Code" then
+                local codeBox
+                local rawContent = part.Content -- Store raw content for copying
+                
+                local codeContainer = Create("Frame", {
+                    Parent = Bubble,
+                    BackgroundColor3 = Color3.fromRGB(30, 30, 30),
+                    BackgroundTransparency = 0.2,
+                    Size = UDim2.new(1, 0, 0, 0),
+                    AutomaticSize = Enum.AutomaticSize.Y,
+                    BorderSizePixel = 0
+                }, {
+                    Create("UICorner", { CornerRadius = UDim.new(0, 4) }),
+                    Create("UIPadding", {
+                        PaddingTop = UDim.new(0, 8),
+                        PaddingBottom = UDim.new(0, 8),
+                        PaddingLeft = UDim.new(0, 8),
+                        PaddingRight = UDim.new(0, 8)
+                    }),
+                    Create("UIListLayout", {
+                        SortOrder = Enum.SortOrder.LayoutOrder,
+                        Padding = UDim.new(0, 4)
+                    })
+                })
+                
+                local codeHeader = Create("Frame", {
+                    Parent = codeContainer,
+                    Size = UDim2.new(1, 0, 0, 20),
+                    BackgroundTransparency = 1
+                })
+                
+                Create("TextLabel", {
+                    Parent = codeHeader,
+                    Text = "Code",
+                    TextColor3 = Theme.TextSecondary,
+                    Font = Enum.Font.GothamBold,
+                    TextSize = 12,
+                    Size = UDim2.new(1, 0, 1, 0),
+                    BackgroundTransparency = 1,
+                    TextXAlignment = Enum.TextXAlignment.Left
+                })
+                
+                local copyBtn = Create("TextButton", {
+                    Parent = codeHeader,
+                    Text = "Copy",
+                    TextColor3 = Theme.TextSecondary,
+                    Font = Enum.Font.Gotham,
+                    TextSize = 12,
+                    Size = UDim2.new(0, 40, 1, 0),
+                    Position = UDim2.new(1, -45, 0, 0),
+                    BackgroundTransparency = 1
+                })
+                
+                copyBtn.MouseButton1Click:Connect(function()
+                    local clipboardFunc = setclipboard or toclipboard or (Synapse and Synapse.write_clipboard)
+                    if clipboardFunc then
+                        clipboardFunc(rawContent) -- Use raw content instead of Box.Text to avoid truncation/corruption
+                        copyBtn.Text = "Copied!"
+                        task.wait(2)
+                        copyBtn.Text = "Copy"
+                    end
+                end)
+                
+                codeBox = Create("TextBox", {
+                    Parent = codeContainer,
+                    Text = isUser and rawContent or "", 
+                    TextColor3 = Color3.fromRGB(200, 200, 200),
+                    Font = Enum.Font.Code,
+                    TextSize = 13,
+                    TextWrapped = true,
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 0),
+                    AutomaticSize = Enum.AutomaticSize.Y,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    TextYAlignment = Enum.TextYAlignment.Top,
+                    ClearTextOnFocus = false,
+                    TextEditable = false,
+                    MultiLine = true
+                })
+
+                if not isUser then
+                    Typewrite(codeBox, rawContent)
+                end
+            end
+        end
+        
+        if ChatScroll then
+            ChatScroll.CanvasPosition = Vector2.new(0, ChatScroll.AbsoluteCanvasSize.Y)
+        end
+    end)
+end
+    
+    -- Final auto-scroll and animation bypass for sharpness
+    task.spawn(function()
+        task.wait()
+        ChatScroll.CanvasPosition = Vector2.new(0, ChatScroll.AbsoluteCanvasSize.Y)
+    end)
+
+
+-- Since CanvasGroup might crash some executors, we will just tween the Bubble transparency? 
+-- Too complex for recursive tween. Let's just pop it in.
+
+local function SendMessage()
+    if IsGenerating then
+        StopGeneration = true
+        SetGenerating(false)
+        return
+    end
+
+    local text = InputBox.Text
+    if text:gsub("%s+", "") == "" then return end
+    
+    InputBox.Text = ""
+    SetGenerating(true)
+    RenderMessage("User", text)
+    
+    table.insert(Config.History, {
+        role = "user",
+        parts = {{text = text}}
+    })
+    
+    -- Show Loading Indicator
+    local loadingMsg = Create("TextLabel", {
+        Parent = ChatScroll,
+        Text = "Gemini is thinking...",
+        TextColor3 = Theme.TextSecondary,
+        Font = Enum.Font.Gotham,
+        TextSize = 12,
+        Size = UDim2.new(1, 0, 0, 20),
+        BackgroundTransparency = 1
+    })
+    
+    task.spawn(function()
+        local httpRequest = (syn and syn.request) or http_request or request or (Fluxus and Fluxus.request)
+        local url = string.format("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", Config.Model, Config.ApiKey)
+        
+        local body = { contents = Config.History }
+        
+        local success, res
+        if httpRequest then
+            success, res = pcall(function()
+                return httpRequest({
+                    Url = url,
+                    Method = "POST",
+                    Headers = { ["Content-Type"] = "application/json" },
+                    Body = HttpService:JSONEncode(body)
+                })
+            end)
+        else
+            success, res = pcall(function()
+                return { 
+                    Body = HttpService:PostAsync(url, HttpService:JSONEncode(body), Enum.HttpContentType.ApplicationJson),
+                    StatusCode = 200
+                }
+            end)
+        end
+        
+        loadingMsg:Destroy()
+        
+        if success and res then
+            local data = HttpService:JSONDecode(res.Body or "{}")
+            if data and data.candidates and data.candidates[1] then
+                local responseText = data.candidates[1].content.parts[1].text
+                RenderMessage("Gemini", responseText)
+                table.insert(Config.History, {
+                    role = "model",
+                    parts = {{text = responseText}}
+                })
+            else
+                RenderMessage("Gemini", "Error: " .. (data.error and data.error.message or "Unknown response"))
+            end
+        else
+            RenderMessage("Gemini", "Connection Failed.")
+        end
+        
+        SetGenerating(false)
+    end)
+end
+
+SendBtn.MouseButton1Click:Connect(SendMessage)
+InputBox.FocusLost:Connect(function(enter)
+    if enter then SendMessage() end
+end)
+
+-- Unload Logic
+getgenv().GeminiChatUnload = function()
+    pcall(function() ScreenGui:Destroy() end)
+    getgenv().GeminiChatLoaded = false
+end
+
+-- Welcome Message
+RenderMessage("Gemini", "Hello! I am **Gemini AI**. How can I help you today?")
+print("[Gemini AI] UI Loaded Successfully!")
