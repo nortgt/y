@@ -1,0 +1,940 @@
+-- // LIBRARIES & SERVICES
+local repo = 'https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/'
+local Library = loadstring(game:HttpGet(repo .. 'Library.lua'))()
+local ThemeManager = loadstring(game:HttpGet(repo .. 'addons/ThemeManager.lua'))()
+local SaveManager = loadstring(game:HttpGet(repo .. 'addons/SaveManager.lua'))()
+
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local TweenService = game:GetService("TweenService")
+local ReplicatedFirst = game:GetService("ReplicatedFirst")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ScriptContext = game:GetService("ScriptContext")
+local Stats = game:GetService("Stats")
+local VirtualUser = game:GetService("VirtualUser")
+
+local Camera = workspace.CurrentCamera
+local LP = Players.LocalPlayer
+
+-- // ASSETS & DATA (HITSOUNDS & SKYBOXES)
+local sound_ids = {
+    ["Rust"] = "rbxassetid://160432334",
+    ["Gamesense"] = "rbxassetid://4753603610",
+    ["Neverlose"] = "rbxassetid://8643322204",
+    ["Bepis"] = "rbxassetid://6028913346"
+}
+
+local current_sky = Lighting:FindFirstChildOfClass("Sky")
+local default_sky = {
+    SkyboxBk = current_sky and current_sky.SkyboxBk or "", SkyboxDn = current_sky and current_sky.SkyboxDn or "",
+    SkyboxFt = current_sky and current_sky.SkyboxFt or "", SkyboxLf = current_sky and current_sky.SkyboxLf or "",
+    SkyboxRt = current_sky and current_sky.SkyboxRt or "", SkyboxUp = current_sky and current_sky.SkyboxUp or ""
+}
+
+local SkyBoxes = {
+    ["Standard"] = default_sky,
+    ["Among Us"] = { ["SkyboxBk"] = "rbxassetid://5752463190", ["SkyboxDn"] = "rbxassetid://5752463190", ["SkyboxFt"] = "rbxassetid://5752463190", ["SkyboxLf"] = "rbxassetid://5752463190", ["SkyboxRt"] = "rbxassetid://5752463190", ["SkyboxUp"] = "rbxassetid://5752463190" },
+    ["Spongebob"] = { ["SkyboxBk"]="rbxassetid://277099484", ["SkyboxDn"]="rbxassetid://277099500", ["SkyboxFt"]="rbxassetid://277099554", ["SkyboxLf"]="rbxassetid://277099531", ["SkyboxRt"]="rbxassetid://277099589", ["SkyboxUp"]="rbxassetid://277101591" },
+    ["Deep Space"] = { ["SkyboxBk"]="rbxassetid://159248188", ["SkyboxDn"]="rbxassetid://159248183", ["SkyboxFt"]="rbxassetid://159248187", ["SkyboxLf"]="rbxassetid://159248173", ["SkyboxRt"]="rbxassetid://159248192", ["SkyboxUp"]="rbxassetid://159248176" },
+    ["Winter"] = { ["SkyboxBk"]="rbxassetid://510645155", ["SkyboxDn"]="rbxassetid://510645130", ["SkyboxFt"]="rbxassetid://510645179", ["SkyboxLf"]="rbxassetid://510645117", ["SkyboxRt"]="rbxassetid://510645146", ["SkyboxUp"]="rbxassetid://510645195" },
+    ["Clouded Sky"] = { ["SkyboxBk"]="rbxassetid://252760981", ["SkyboxDn"]="rbxassetid://252763035", ["SkyboxFt"]="rbxassetid://252761439", ["SkyboxLf"]="rbxassetid://252760980", ["SkyboxRt"]="rbxassetid://252760986", ["SkyboxUp"]="rbxassetid://252762652" }
+}
+
+-- // BACKUP ORIGINAL LIGHTING
+local OriginalLighting = {
+    Ambient = Lighting.Ambient,
+    OutdoorAmbient = Lighting.OutdoorAmbient,
+    ColorShift_Bottom = Lighting.ColorShift_Bottom,
+    ColorShift_Top = Lighting.ColorShift_Top,
+    GlobalShadows = Lighting.GlobalShadows,
+    ClockTime = Lighting.ClockTime,
+    FogEnd = Lighting.FogEnd,
+    FogStart = Lighting.FogStart
+}
+
+local game_atmosphere = Lighting:FindFirstChildWhichIsA("Atmosphere")
+local original_atmosphere_density = game_atmosphere and game_atmosphere.Density or 0
+
+-- // SILENT AIM & APOC 2 FRAMEWORK INITIALIZATION
+local Framework, Classes, Libraries, Bullets, OldFire, Entities, Network
+pcall(function()
+    Framework = require(ReplicatedFirst:WaitForChild("Framework"))
+    if Framework.WaitForLoaded then pcall(function() Framework:WaitForLoaded() end) end
+    Classes = Framework.Classes
+    Libraries = Framework.Libraries
+    Bullets = Libraries and Libraries.Bullets
+    Entities = Libraries and Libraries.Entities
+    Network = Libraries and Libraries.Network
+end)
+
+-- // FOLDERS & WORKSPACE ELEMENTS
+local CHAR_FOLDER = workspace:WaitForChild("Characters", 10)
+local ZOMBIES = workspace:FindFirstChild("Zombies")
+local CORPSES = workspace:FindFirstChild("Corpses")
+local VEHICLES = workspace:FindFirstChild("Vehicles")
+
+-- // AUDIO SETUP
+local HitmarkerSound = Instance.new("Sound")
+HitmarkerSound.Volume = 3
+HitmarkerSound.Parent = workspace
+
+-- // DRAWING OBJECTS
+local SilentFovCircle = Drawing.new("Circle")
+SilentFovCircle.Thickness = 1; SilentFovCircle.NumSides = 64; SilentFovCircle.Filled = false; SilentFovCircle.Visible = false
+
+local AimLockFovCircle = Drawing.new("Circle")
+AimLockFovCircle.Thickness = 1; AimLockFovCircle.NumSides = 64; AimLockFovCircle.Filled = false; AimLockFovCircle.Visible = false
+
+local AimTracer = Drawing.new("Line")
+AimTracer.Thickness = 1.5; AimTracer.Color = Color3.fromRGB(255, 50, 50); AimTracer.Visible = false
+
+local TargetDot = Drawing.new("Circle")
+TargetDot.Thickness = 1; TargetDot.Radius = 4; TargetDot.Filled = true; TargetDot.Color = Color3.fromRGB(255, 0, 0); TargetDot.Visible = false
+
+local CustomCrosshair = { Top = Drawing.new("Line"), Bottom = Drawing.new("Line"), Left = Drawing.new("Line"), Right = Drawing.new("Line") }
+for _, line in pairs(CustomCrosshair) do line.Thickness = 2; line.Color = Color3.fromRGB(0, 255, 0); line.Visible = false end
+
+local ESP_Table = {}
+local Corpse_Objects = {}
+local Vehicle_Data = {}
+local ItemESP_Cache = { Texts = {}, Nodes = {}, LastRefresh = 0 }
+local LootBoxESP_Cache = { Texts = {}, Entries = {}, LastRefresh = 0 }
+
+local CurrentSilentTarget, CurrentSilentRoot, SilentAimPoint = nil, nil, nil
+local CurrentAimLockTarget, CurrentAimLockRoot, AimLockPoint = nil, nil, nil
+
+-- // KNOWN PLAYERS LIST
+local KnownPlayers = {}
+local function UpdatePlayerList() for _, p in pairs(Players:GetPlayers()) do KnownPlayers[p.Name] = true end end
+Players.PlayerAdded:Connect(function(p) KnownPlayers[p.Name] = true end)
+UpdatePlayerList()
+
+-- // ANTI-CRASH HOOK
+task.spawn(function()
+    pcall(function()
+        if getconnections then for _, Connection in pairs(getconnections(ScriptContext.Error)) do Connection:Disconnect() end end
+    end)
+end)
+
+-- // HITBOX SPOOFING SYSTEM (Untouched as requested)
+local originalHeadProps = {}
+local oldIndex
+oldIndex = hookmetamethod(game, "__index", function(self, key)
+    if not checkcaller() and key == "Size" and originalHeadProps[self] then
+        return originalHeadProps[self].Size
+    end
+    return oldIndex(self, key)
+end)
+
+local oldNewIndex
+oldNewIndex = hookmetamethod(game, "__newindex", function(self, key, value)
+    if not checkcaller() and key == "Size" and originalHeadProps[self] then
+        originalHeadProps[self].Size = value
+        return
+    end
+    return oldNewIndex(self, key, value)
+end)
+
+-- // UTILITY FUNCTIONS
+local function GetProperName(character)
+    local player = Players:GetPlayerFromCharacter(character)
+    return player and (player.DisplayName or player.Name) or character.Name
+end
+
+local function GetEquippedWeapon(character)
+    local tool = character:FindFirstChildOfClass("Tool")
+    if tool then return tool.Name end
+    local equipFolder = character:FindFirstChild("Equipped") or character:FindFirstChild("Equip")
+    if equipFolder then
+        for _, child in pairs(equipFolder:GetChildren()) do
+            if child:IsA("Model") or child:IsA("BasePart") then return child.Name end
+        end
+    end
+    return nil
+end
+
+local function IsPointVisible(targetPos, targetCharacter, wallbangEnabled)
+    if wallbangEnabled then return true end
+    local rayParams = RaycastParams.new()
+    rayParams.FilterType = Enum.RaycastFilterType.Exclude
+    rayParams.FilterDescendantsInstances = {LP.Character, targetCharacter, Camera}
+    rayParams.IgnoreWater = true
+    local result = workspace:Raycast(Camera.CFrame.Position, targetPos - Camera.CFrame.Position, rayParams)
+    return result == nil
+end
+
+-- // ULTRA OPTIMIZED & ABSOLUTE DYNAMIC 9-POINT CHECK
+local function GetClosestTargetAndPoint(fovRadius, wallbangEnabled)
+    local target, root, aimPoint = nil, nil, nil
+    local shortest = fovRadius
+    local mouseLoc = UserInputService:GetMouseLocation()
+
+    if not CHAR_FOLDER then return nil, nil, nil end
+
+    for _, char in pairs(CHAR_FOLDER:GetChildren()) do
+        if char:IsA("Model") and char ~= LP.Character then
+            local head = char:FindFirstChild("Head")
+            local rootPart = char:FindFirstChild("HumanoidRootPart")
+            local hum = char:FindFirstChild("Humanoid")
+
+            if head and rootPart and hum and hum.Health > 0 then
+                local pos, onScreen = Camera:WorldToViewportPoint(head.Position)
+                if onScreen then
+                    local magToCenter = (Vector2.new(pos.X, pos.Y) - mouseLoc).Magnitude
+
+                    if magToCenter < (fovRadius + 50) then
+                        local cf = head.CFrame
+
+                        -- DYNAMIC SIZE FIX: Reads directly from slider
+                        local currentSize = 1.5
+                        if Toggles.HitboxEnabled and Toggles.HitboxEnabled.Value and Options.HitboxSize then
+                            currentSize = Options.HitboxSize.Value
+                        end
+
+                        -- ABSOLUTE MARGIN FIX: Instead of percentage (which shrinks too much on large hitboxes),
+                        -- we subtract exactly 0.6 studs from the literal edge. This perfectly adapts to ANY slider value.
+                        local offset = (currentSize / 2) - 0.6
+                        if offset < 0 then offset = 0 end -- Prevents going negative if slider is somehow 1.0
+
+                        local points = {
+                            head.Position, -- Center
+                            head.Position + (cf.UpVector * offset), -- Top
+                            head.Position - (cf.UpVector * offset), -- Bottom
+                            head.Position + (cf.RightVector * offset), -- Right
+                            head.Position - (cf.RightVector * offset), -- Left
+                            head.Position + (cf.UpVector * offset) + (cf.RightVector * offset), -- Top Right
+                            head.Position + (cf.UpVector * offset) - (cf.RightVector * offset), -- Top Left
+                            head.Position - (cf.UpVector * offset) + (cf.RightVector * offset), -- Bottom Right
+                            head.Position - (cf.UpVector * offset) - (cf.RightVector * offset)  -- Bottom Left
+                        }
+
+                        local validPoint = nil
+                        for _, pt in ipairs(points) do
+                            if IsPointVisible(pt, char, wallbangEnabled) then
+                                validPoint = pt; break
+                            end
+                        end
+
+                        if validPoint then
+                            local exactPos, _ = Camera:WorldToViewportPoint(validPoint)
+                            local exactMag = (Vector2.new(exactPos.X, exactPos.Y) - mouseLoc).Magnitude
+
+                            if exactMag < shortest then
+                                shortest = exactMag; target = head; root = rootPart; aimPoint = validPoint
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return target, root, aimPoint
+end
+
+local function GetAutoPredictionTime()
+    local success, ping = pcall(function() return Stats.Network.ServerStatsItem["Data Ping"]:GetValue() end)
+    if success and ping then return (ping / 1000) + 0.02 end
+    return 0.1
+end
+
+local function CreateBulletTracer(origin, targetPos)
+    task.spawn(function()
+        if typeof(origin) ~= "Vector3" or typeof(targetPos) ~= "Vector3" then return end
+        local distance = (origin - targetPos).Magnitude
+        if distance < 1 then return end
+
+        local tracer = Instance.new("Part")
+        tracer.Anchored = true; tracer.CanCollide = false; tracer.CanTouch = false; tracer.CanQuery = false
+        tracer.Massless = true; tracer.CastShadow = false; tracer.Material = Enum.Material.ForceField
+        tracer.Color = Options.TracerColor and Options.TracerColor.Value or Color3.fromRGB(255, 255, 0)
+        tracer.Size = Vector3.new(0.04, 0.04, distance)
+        tracer.CFrame = CFrame.lookAt(origin, targetPos) * CFrame.new(0, 0, -distance / 2)
+        tracer.Parent = Camera
+
+        local tween = TweenService:Create(tracer, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Transparency = 1, Size = Vector3.new(0, 0, distance)})
+        tween:Play(); task.wait(0.5); tracer:Destroy()
+    end)
+end
+
+local function getChunkDataFolder()
+    local chunking = ReplicatedStorage:FindFirstChild("Chunking") or ReplicatedStorage:FindFirstChild("chunking")
+    if chunking then return chunking:FindFirstChild("chunk data") or chunking:FindFirstChild("ChunkData") end
+    return nil
+end
+
+local function getLootWorldPosition(instance)
+    if not (instance and instance.Parent) then return nil end
+    if instance:IsA("BasePart") then return instance.Position end
+    if instance:IsA("Attachment") then return instance.WorldPosition end
+    if instance:IsA("CFrameValue") then return instance.Value.Position end
+    if instance:IsA("Model") then
+        local primary = instance.PrimaryPart or instance:FindFirstChildWhichIsA("BasePart", true)
+        if primary then return primary.Position end
+        local ok, pivot = pcall(function() return instance:GetPivot() end)
+        if ok and typeof(pivot) == "CFrame" then return pivot.Position end
+    end
+    return nil
+end
+
+local GrabAllRuntime = { Running = false, LastRunAt = 0, MinInterval = 0.35 }
+local function GrabAllLootAction()
+    local now = tick()
+    if GrabAllRuntime.Running or (now - GrabAllRuntime.LastRunAt) < GrabAllRuntime.MinInterval then return end
+    GrabAllRuntime.Running = true; GrabAllRuntime.LastRunAt = now
+    task.spawn(function()
+        pcall(function()
+            if not (Entities and Network) then return end
+            if type(Entities.Search) ~= "function" or type(Network.Send) ~= "function" then return end
+            local map = workspace:FindFirstChild("Map")
+            local elements = map and map:FindFirstChild("Elements")
+            if not elements then return end
+            local sentIds = {}
+            for _, element in pairs(elements:GetChildren()) do
+                local detail = element:FindFirstChild("Detail", true)
+                if detail then
+                    for _, instance in pairs(detail:GetChildren()) do
+                        local okSearch, entity = pcall(function() return Entities:Search(instance) end)
+                        if okSearch and entity and entity.Type == "Loot Group" and entity.Id and not sentIds[entity.Id] then
+                            sentIds[entity.Id] = true
+                            pcall(function() Network:Send("Client Interacted", entity.Id) end)
+                        end
+                    end
+                end
+            end
+        end)
+        GrabAllRuntime.Running = false
+    end)
+end
+
+-- // HOOK: SILENT AIM
+if Bullets then
+    OldFire = hookfunction(Bullets.Fire, function(self, ...)
+        local Args = {...}
+        if Toggles.SilentAimEnabled and Toggles.SilentAimEnabled.Value and SilentAimPoint and CurrentSilentRoot then
+            local origin = Args[4]
+            local finalOrigin = typeof(origin) == "Vector3" and origin
+            if not finalOrigin then
+                local tool = LP.Character and LP.Character:FindFirstChildOfClass("Tool")
+                local handle = tool and (tool:FindFirstChild("Handle") or tool:FindFirstChild("Muzzle") or tool:FindFirstChild("FirePart") or tool:FindFirstChildOfClass("BasePart"))
+                finalOrigin = handle and handle.Position or Camera.CFrame.Position
+            end
+
+            local predictionTime = GetAutoPredictionTime()
+            local targetVelocity = CurrentSilentRoot.AssemblyLinearVelocity
+            local predictedPosition = SilentAimPoint + (targetVelocity * predictionTime)
+
+            Args[5] = (predictedPosition - finalOrigin).Unit
+
+            if Toggles.HitSound.Value then
+                pcall(function()
+                    HitmarkerSound.SoundId = sound_ids[Options.HitSoundType.Value] or sound_ids["Gamesense"]
+                    HitmarkerSound:Play()
+                end)
+            end
+            if Toggles.BulletTracer.Value then CreateBulletTracer(finalOrigin, predictedPosition) end
+        end
+        return OldFire(self, unpack(Args))
+    end)
+end
+
+-- // ESP BUILDERS
+local function CreateESP(obj)
+    if ESP_Table[obj] then return end
+    local data = { BoxOutline = Drawing.new("Square"), Box = Drawing.new("Square"), Name = Drawing.new("Text"), Distance = Drawing.new("Text"), Weapon = Drawing.new("Text"), HealthBarBG = Drawing.new("Square"), HealthBar = Drawing.new("Square") }
+
+    data.BoxOutline.Thickness = 3; data.BoxOutline.Color = Color3.new(0,0,0); data.BoxOutline.Filled = false
+    data.Box.Thickness = 1; data.Box.Color = Color3.new(1,1,1); data.Box.Filled = false
+
+    data.Name.Size = 13; data.Name.Center = true; data.Name.Outline = true; data.Name.Color = Color3.new(1,1,1); data.Name.Font = 2
+    data.Distance.Size = 13; data.Distance.Center = true; data.Distance.Outline = true; data.Distance.Color = Color3.fromRGB(200, 200, 200); data.Distance.Font = 2
+    data.Weapon.Size = 13; data.Weapon.Center = true; data.Weapon.Outline = true; data.Weapon.Color = Color3.fromRGB(255, 215, 0); data.Weapon.Font = 2
+
+    data.HealthBarBG.Filled = true; data.HealthBarBG.Color = Color3.new(0,0,0); data.HealthBarBG.Thickness = 1
+    data.HealthBar.Filled = true; data.HealthBar.Thickness = 1
+
+    ESP_Table[obj] = data
+end
+
+local function CreateWorldESP(dict, obj, color, icon)
+    if dict[obj] then return end
+    local data = { Name = Drawing.new("Text"), Dist = Drawing.new("Text"), Highlight = Instance.new("Highlight") }
+    data.Name.Size = 13; data.Name.Center = true; data.Name.Outline = true; data.Name.Color = color; data.Name.Font = 2
+    data.Dist.Size = 13; data.Dist.Center = true; data.Dist.Outline = true; data.Dist.Color = Color3.new(1, 1, 1); data.Dist.Font = 2
+    data.Highlight.Parent = obj; data.Highlight.FillColor = color; data.Highlight.FillTransparency = 0.5; data.Highlight.OutlineColor = Color3.new(1, 1, 1); data.Highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    dict[obj] = {Drawings = data, Icon = icon}
+end
+
+local function CreateTextDrawing(color)
+    local t = Drawing.new("Text")
+    t.Size = 13; t.Font = 2; t.Outline = true; t.Center = true; t.Color = color; t.Visible = false
+    return t
+end
+
+-- // MAIN RENDER LOOP (COMBAT, ESP & LIGHTING)
+local AutoShootTick = 0
+RunService.RenderStepped:Connect(function()
+    local mouseLoc = UserInputService:GetMouseLocation()
+    local current_atmosphere = Lighting:FindFirstChildWhichIsA("Atmosphere")
+
+    -- // LIGHTING & VISUALS LOGIC
+    if Toggles.FullBright and Toggles.FullBright.Value then
+        Lighting.Ambient = Color3.new(1, 1, 1)
+        Lighting.OutdoorAmbient = Color3.new(1, 1, 1)
+        Lighting.ColorShift_Bottom = Color3.new(1, 1, 1)
+        Lighting.ColorShift_Top = Color3.new(1, 1, 1)
+        Lighting.GlobalShadows = false
+        Lighting.ClockTime = 14
+    else
+        if Toggles.EveningMode and Toggles.EveningMode.Value then
+            Lighting.ClockTime = 18
+            Lighting.Ambient = Color3.fromRGB(150, 150, 150)
+            Lighting.OutdoorAmbient = Color3.fromRGB(150, 150, 150)
+            Lighting.GlobalShadows = OriginalLighting.GlobalShadows
+        else
+            Lighting.Ambient = OriginalLighting.Ambient
+            Lighting.OutdoorAmbient = OriginalLighting.OutdoorAmbient
+            Lighting.ColorShift_Bottom = OriginalLighting.ColorShift_Bottom
+            Lighting.ColorShift_Top = OriginalLighting.ColorShift_Top
+            Lighting.GlobalShadows = OriginalLighting.GlobalShadows
+            Lighting.ClockTime = OriginalLighting.ClockTime
+        end
+    end
+
+    if Toggles.NoFog and Toggles.NoFog.Value then
+        Lighting.FogEnd = 100000
+        Lighting.FogStart = 100000
+        if current_atmosphere then current_atmosphere.Density = 0 end
+    else
+        Lighting.FogEnd = OriginalLighting.FogEnd
+        Lighting.FogStart = OriginalLighting.FogStart
+        if current_atmosphere then current_atmosphere.Density = original_atmosphere_density end
+    end
+
+    if Toggles.FOV_Active and Toggles.FOV_Active.Value then Camera.FieldOfView = Options.FOV_Value.Value end
+
+    -- Crosshair
+    if Toggles.ShowCrosshair and Toggles.ShowCrosshair.Value then
+        local gap = Options.CrosshairGap.Value; local len = Options.CrosshairLength.Value
+        CustomCrosshair.Top.From = Vector2.new(mouseLoc.X, mouseLoc.Y - gap); CustomCrosshair.Top.To = Vector2.new(mouseLoc.X, mouseLoc.Y - gap - len); CustomCrosshair.Top.Visible = true
+        CustomCrosshair.Bottom.From = Vector2.new(mouseLoc.X, mouseLoc.Y + gap); CustomCrosshair.Bottom.To = Vector2.new(mouseLoc.X, mouseLoc.Y + gap + len); CustomCrosshair.Bottom.Visible = true
+        CustomCrosshair.Left.From = Vector2.new(mouseLoc.X - gap, mouseLoc.Y); CustomCrosshair.Left.To = Vector2.new(mouseLoc.X - gap - len, mouseLoc.Y); CustomCrosshair.Left.Visible = true
+        CustomCrosshair.Right.From = Vector2.new(mouseLoc.X + gap, mouseLoc.Y); CustomCrosshair.Right.To = Vector2.new(mouseLoc.X + gap + len, mouseLoc.Y); CustomCrosshair.Right.Visible = true
+    else
+        for _, line in pairs(CustomCrosshair) do line.Visible = false end
+    end
+
+    -- AimLock
+    AimLockFovCircle.Position = mouseLoc; AimLockFovCircle.Radius = Options.AimLockFov and Options.AimLockFov.Value or 150
+    AimLockFovCircle.Color = Options.AimLockFovColor and Options.AimLockFovColor.Value or Color3.fromRGB(255, 255, 255)
+    AimLockFovCircle.Visible = Toggles.AimLockEnabled and Toggles.AimLockEnabled.Value and Toggles.ShowAimLockFov.Value
+
+    CurrentAimLockTarget, CurrentAimLockRoot, AimLockPoint = GetClosestTargetAndPoint(Options.AimLockFov.Value, Toggles.AimLockWallHack.Value)
+
+    if Toggles.AimLockEnabled and Toggles.AimLockEnabled.Value and Options.AimLockKey:GetState() and AimLockPoint then
+        local targetPos = AimLockPoint
+        local predictionTime = GetAutoPredictionTime()
+        if CurrentAimLockRoot then targetPos = targetPos + (CurrentAimLockRoot.AssemblyLinearVelocity * predictionTime) end
+
+        local screenPos, onScreen = Camera:WorldToViewportPoint(targetPos)
+        if onScreen and mousemoverel then
+            local smooth = Options.AimLockSmoothness.Value
+            if smooth < 1 then smooth = 1 end
+            mousemoverel((screenPos.X - mouseLoc.X) / smooth, (screenPos.Y - mouseLoc.Y) / smooth)
+        end
+    end
+
+    -- Silent Aim
+    SilentFovCircle.Position = mouseLoc; SilentFovCircle.Radius = Options.SilentAimFov and Options.SilentAimFov.Value or 150
+    SilentFovCircle.Color = Options.SilentFovColor and Options.SilentFovColor.Value or Color3.fromRGB(255, 50, 50)
+    SilentFovCircle.Visible = Toggles.SilentAimEnabled and Toggles.SilentAimEnabled.Value and Toggles.ShowSilentFov.Value
+
+    CurrentSilentTarget, CurrentSilentRoot, SilentAimPoint = GetClosestTargetAndPoint(Options.SilentAimFov.Value, Toggles.SilentWallHack.Value)
+
+    if Toggles.SilentAimEnabled and Toggles.SilentAimEnabled.Value and SilentAimPoint then
+        local screenPos, onScreen = Camera:WorldToViewportPoint(SilentAimPoint)
+
+        if onScreen then
+            TargetDot.Position = Vector2.new(screenPos.X, screenPos.Y)
+            TargetDot.Visible = true
+
+            if Toggles.ShowAimTracer.Value then
+                AimTracer.From = mouseLoc; AimTracer.To = Vector2.new(screenPos.X, screenPos.Y); AimTracer.Visible = true
+            else AimTracer.Visible = false end
+        else
+            TargetDot.Visible = false
+            AimTracer.Visible = false
+        end
+
+        if Toggles.AutoShootEnabled and Toggles.AutoShootEnabled.Value and Options.AutoShootKey:GetState() then
+            if tick() - AutoShootTick > 0.08 then
+                AutoShootTick = tick()
+                if mouse1click then
+                    mouse1click()
+                else
+                    VirtualUser:ClickButton1(Vector2.new(mouseLoc.X, mouseLoc.Y))
+                end
+            end
+        end
+    else
+        TargetDot.Visible = false
+        AimTracer.Visible = false
+    end
+
+    -- Premium ESP
+    local activePlayers = {}
+    if Toggles.ESP_Enabled and Toggles.ESP_Enabled.Value and CHAR_FOLDER then
+        for _, char in pairs(CHAR_FOLDER:GetChildren()) do
+            if char:IsA("Model") and char ~= LP.Character then
+                local hrp = char:FindFirstChild("HumanoidRootPart"); local hum = char:FindFirstChild("Humanoid")
+                if hrp and hum and hum.Health > 0 then
+                    activePlayers[char] = true
+                    if not ESP_Table[char] then CreateESP(char) end
+                    local data = ESP_Table[char]
+                    local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                    local dist = (Camera.CFrame.Position - hrp.Position).Magnitude
+
+                    if onScreen and dist <= Options.ESP_MaxDistance.Value then
+                        local headPos = char:FindFirstChild("Head") and char.Head.Position or (hrp.Position + Vector3.new(0, 2, 0))
+                        local legPos = hrp.Position - Vector3.new(0, 3, 0)
+                        local top, _ = Camera:WorldToViewportPoint(headPos + Vector3.new(0, 0.5, 0))
+                        local bottom, _ = Camera:WorldToViewportPoint(legPos)
+
+                        local sizeY = math.abs(top.Y - bottom.Y)
+                        local sizeX = sizeY * 0.55
+                        local topY = top.Y
+
+                        data.BoxOutline.Visible = Toggles.ESP_Box.Value
+                        data.BoxOutline.Size = Vector2.new(sizeX, sizeY)
+                        data.BoxOutline.Position = Vector2.new(pos.X - sizeX / 2, topY)
+
+                        data.Box.Visible = Toggles.ESP_Box.Value
+                        data.Box.Size = Vector2.new(sizeX, sizeY)
+                        data.Box.Position = Vector2.new(pos.X - sizeX / 2, topY)
+                        data.Box.Color = Options.ESP_Color and Options.ESP_Color.Value or Color3.new(1,1,1)
+
+                        data.Name.Visible = Toggles.ESP_Name.Value
+                        data.Name.Text = GetProperName(char)
+                        data.Name.Position = Vector2.new(pos.X, topY - 15)
+
+                        data.Distance.Visible = Toggles.ESP_Distance.Value
+                        data.Distance.Text = "[" .. math.floor(dist) .. "m]"
+                        data.Distance.Position = Vector2.new(pos.X, topY + sizeY + 2)
+
+                        if Toggles.ESP_Weapon.Value then
+                            local weaponName = GetEquippedWeapon(char)
+                            if weaponName then
+                                data.Weapon.Visible = true
+                                data.Weapon.Text = weaponName
+                                data.Weapon.Position = Vector2.new(pos.X, topY + sizeY + (Toggles.ESP_Distance.Value and 14 or 2))
+                            else data.Weapon.Visible = false end
+                        else data.Weapon.Visible = false end
+
+                        if Toggles.ESP_HealthBar.Value then
+                            local healthPercent = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
+                            local barHeight = math.floor(sizeY * healthPercent)
+
+                            data.HealthBarBG.Visible = true
+                            data.HealthBarBG.Size = Vector2.new(3, sizeY + 2)
+                            data.HealthBarBG.Position = Vector2.new(pos.X - (sizeX / 2) - 5, topY - 1)
+
+                            data.HealthBar.Visible = true
+                            data.HealthBar.Size = Vector2.new(1, barHeight)
+                            data.HealthBar.Position = Vector2.new(pos.X - (sizeX / 2) - 4, topY + (sizeY - barHeight))
+                            data.HealthBar.Color = Color3.fromRGB(255 - (healthPercent * 255), healthPercent * 255, 0)
+                        else
+                            data.HealthBarBG.Visible = false; data.HealthBar.Visible = false
+                        end
+                    else
+                        for _, v in pairs(data) do v.Visible = false end
+                    end
+                end
+            end
+        end
+    end
+
+    for char, data in pairs(ESP_Table) do
+        if not activePlayers[char] then
+            for _, v in pairs(data) do pcall(function() v.Visible = false end) end
+            if typeof(char) ~= "Instance" or not char.Parent then
+                for _, v in pairs(data) do pcall(function() v:Remove() end) end
+                ESP_Table[char] = nil
+            end
+        end
+    end
+
+    local activeCorpses = {}
+    if Toggles.Corpse_Enabled and Toggles.Corpse_Enabled.Value and CORPSES then
+        for _, obj in pairs(CORPSES:GetChildren()) do
+            if obj:IsA("Model") and KnownPlayers[obj.Name] then
+                local hrp = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChildWhichIsA("BasePart")
+                if hrp then
+                    activeCorpses[obj] = true
+                    if not Corpse_Objects[obj] then CreateWorldESP(Corpse_Objects, obj, Color3.fromRGB(255, 50, 50), "ð") end
+                    local data = Corpse_Objects[obj]
+                    local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                    local dist = (Camera.CFrame.Position - hrp.Position).Magnitude
+                    if onScreen and dist < 3000 then
+                        data.Drawings.Name.Visible = Toggles.Corpse_Name.Value; data.Drawings.Name.Text = data.Icon .. " " .. obj.Name; data.Drawings.Name.Position = Vector2.new(pos.X, pos.Y - 25)
+                        data.Drawings.Dist.Visible = Toggles.Corpse_Distance.Value; data.Drawings.Dist.Text = math.floor(dist) .. "m"; data.Drawings.Dist.Position = Vector2.new(pos.X, pos.Y - 5)
+                        data.Drawings.Highlight.Enabled = Toggles.Corpse_Chams.Value
+                    else data.Drawings.Name.Visible = false; data.Drawings.Dist.Visible = false; data.Drawings.Highlight.Enabled = false end
+                end
+            end
+        end
+    end
+
+    for obj, data in pairs(Corpse_Objects) do
+        if not activeCorpses[obj] then
+            pcall(function() data.Drawings.Name.Visible = false; data.Drawings.Dist.Visible = false; data.Drawings.Highlight.Enabled = false end)
+            if typeof(obj) ~= "Instance" or not obj.Parent then
+                pcall(function() data.Drawings.Name:Remove() end); pcall(function() data.Drawings.Dist:Remove() end); pcall(function() data.Drawings.Highlight:Destroy() end)
+                Corpse_Objects[obj] = nil
+            end
+        end
+    end
+
+    local activeVehicles = {}
+    if Toggles.Vehicle_Enabled and Toggles.Vehicle_Enabled.Value and VEHICLES then
+        for _, v in pairs(VEHICLES:GetChildren()) do
+            local primary = v:FindFirstChild("DriveSeat") or v:FindFirstChildWhichIsA("BasePart", true)
+            if primary then
+                activeVehicles[v] = true
+                if not Vehicle_Data[v] then CreateWorldESP(Vehicle_Data, v, Color3.fromRGB(255, 255, 50), "ð") end
+                local data = Vehicle_Data[v]
+                local pos, onScreen = Camera:WorldToViewportPoint(primary.Position)
+                local dist = (Camera.CFrame.Position - primary.Position).Magnitude
+                if onScreen and dist < 10000 then
+                    data.Drawings.Name.Visible = Toggles.Vehicle_Name.Value; data.Drawings.Name.Text = data.Icon .. " " .. v.Name; data.Drawings.Name.Position = Vector2.new(pos.X, pos.Y - 20)
+                    data.Drawings.Dist.Visible = Toggles.Vehicle_Distance.Value; data.Drawings.Dist.Text = "[" .. math.floor(dist) .. "m]"; data.Drawings.Dist.Position = Vector2.new(pos.X, pos.Y)
+                    data.Drawings.Highlight.Enabled = Toggles.Vehicle_Chams.Value
+                else data.Drawings.Name.Visible = false; data.Drawings.Dist.Visible = false; data.Drawings.Highlight.Enabled = false end
+            end
+        end
+    end
+
+    for obj, data in pairs(Vehicle_Data) do
+        if not activeVehicles[obj] then
+            pcall(function() data.Drawings.Name.Visible = false; data.Drawings.Dist.Visible = false; data.Drawings.Highlight.Enabled = false end)
+            if typeof(obj) ~= "Instance" or not obj.Parent then
+                pcall(function() data.Drawings.Name:Remove() end); pcall(function() data.Drawings.Dist:Remove() end); pcall(function() data.Drawings.Highlight:Destroy() end)
+                Vehicle_Data[obj] = nil
+            end
+        end
+    end
+
+    local activeItems = {}
+    if Toggles.ItemEspEnabled and Toggles.ItemEspEnabled.Value then
+        if tick() - ItemESP_Cache.LastRefresh > 3 then
+            ItemESP_Cache.LastRefresh = tick()
+            local chunkData = getChunkDataFolder()
+            local nodes = {}
+            if chunkData then
+                for _, obj in ipairs(chunkData:GetDescendants()) do if obj.Name == "ItemNodeBin" and obj:IsA("CFrameValue") then nodes[obj] = true end end
+            end
+            local map = workspace:FindFirstChild("Map")
+            if map and map:FindFirstChild("Elements") then
+                for _, el in pairs(map.Elements:GetChildren()) do
+                    local d = el:FindFirstChild("Detail", true)
+                    if d then for _, i in pairs(d:GetChildren()) do if i:IsA("Model") and i.Name == "Model" then nodes[i] = true end end end
+                end
+            end
+            ItemESP_Cache.Nodes = nodes
+        end
+
+        for node, _ in pairs(ItemESP_Cache.Nodes) do
+            local wPos = getLootWorldPosition(node)
+            if wPos then
+                local dist = (Camera.CFrame.Position - wPos).Magnitude
+                if dist <= Options.ItemEspDistance.Value then
+                    local vp, on = Camera:WorldToViewportPoint(wPos)
+                    if on and vp.Z > 0 then
+                        if not ItemESP_Cache.Texts[node] then ItemESP_Cache.Texts[node] = CreateTextDrawing(Color3.fromRGB(150, 255, 100)) end
+                        local txt = ItemESP_Cache.Texts[node]
+                        txt.Text = "Item [" .. math.floor(dist) .. "m]"; txt.Position = Vector2.new(vp.X, vp.Y); txt.Visible = true
+                        activeItems[node] = true
+                    else
+                        if ItemESP_Cache.Texts[node] then ItemESP_Cache.Texts[node].Visible = false end
+                    end
+                else
+                    if ItemESP_Cache.Texts[node] then ItemESP_Cache.Texts[node].Visible = false end
+                end
+            end
+        end
+    end
+
+    for node, txt in pairs(ItemESP_Cache.Texts) do
+        if not activeItems[node] then
+            pcall(function() txt.Visible = false end)
+            if typeof(node) ~= "Instance" or not node.Parent then
+                pcall(function() txt:Remove() end); ItemESP_Cache.Texts[node] = nil
+            end
+        end
+    end
+
+    local activeLoot = {}
+    if Toggles.LootBoxEspEnabled and Toggles.LootBoxEspEnabled.Value then
+        if tick() - LootBoxESP_Cache.LastRefresh > 3 then
+            LootBoxESP_Cache.LastRefresh = tick()
+            local entries = {}
+            if Entities and Entities.Search then
+                local map = workspace:FindFirstChild("Map")
+                if map and map:FindFirstChild("Elements") then
+                    for _, el in pairs(map.Elements:GetChildren()) do
+                        local d = el:FindFirstChild("Detail", true)
+                        if d then
+                            for _, inst in pairs(d:GetChildren()) do
+                                pcall(function()
+                                    local e = Entities:Search(inst)
+                                    if e and e.Type == "Loot Group" then entries[inst] = true end
+                                end)
+                            end
+                        end
+                    end
+                end
+            end
+            LootBoxESP_Cache.Entries = entries
+        end
+
+        for inst, _ in pairs(LootBoxESP_Cache.Entries) do
+            local wPos = getLootWorldPosition(inst)
+            if wPos then
+                local dist = (Camera.CFrame.Position - wPos).Magnitude
+                if dist <= Options.LootBoxEspDistance.Value then
+                    local vp, on = Camera:WorldToViewportPoint(wPos)
+                    if on and vp.Z > 0 then
+                        if not LootBoxESP_Cache.Texts[inst] then LootBoxESP_Cache.Texts[inst] = CreateTextDrawing(Color3.fromRGB(255, 150, 0)) end
+                        local txt = LootBoxESP_Cache.Texts[inst]
+                        txt.Text = "LootBox [" .. math.floor(dist) .. "m]"; txt.Position = Vector2.new(vp.X, vp.Y); txt.Visible = true
+                        activeLoot[inst] = true
+                    else
+                        if LootBoxESP_Cache.Texts[inst] then LootBoxESP_Cache.Texts[inst].Visible = false end
+                    end
+                else
+                    if LootBoxESP_Cache.Texts[inst] then LootBoxESP_Cache.Texts[inst].Visible = false end
+                end
+            end
+        end
+    end
+
+    for inst, txt in pairs(LootBoxESP_Cache.Texts) do
+        if not activeLoot[inst] then
+            pcall(function() txt.Visible = false end)
+            if typeof(inst) ~= "Instance" or not inst.Parent then
+                pcall(function() txt:Remove() end); LootBoxESP_Cache.Texts[inst] = nil
+            end
+        end
+    end
+end)
+
+-- // LOCAL MODS & HITBOX
+RunService.Heartbeat:Connect(function()
+    pcall(function()
+        local character = LP.Character
+        local humanoid = character and character:FindFirstChild("Humanoid")
+        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+        if humanoid and hrp then
+            if Toggles.InfJump and Toggles.InfJump.Value and UserInputService:IsKeyDown(Enum.KeyCode.Space) then humanoid:ChangeState(Enum.HumanoidStateType.Jumping) end
+            if Toggles.AntiFallDamage and Toggles.AntiFallDamage.Value and hrp.Velocity.Y < -50 then
+                hrp.Velocity = Vector3.new(hrp.Velocity.X, -10, hrp.Velocity.Z); humanoid:ChangeState(Enum.HumanoidStateType.Landed)
+            end
+        end
+    end)
+
+    if Toggles.ZOMBIE_ANCHOR and ZOMBIES then
+        local freeze = Toggles.ZOMBIE_ANCHOR.Value
+        for _, z in ipairs(ZOMBIES:GetChildren()) do
+            if z:IsA("Model") then
+                local root = z:FindFirstChild("HumanoidRootPart"); local hum = z:FindFirstChild("Humanoid")
+                if root then root.Anchored = freeze end; if hum and freeze then hum.WalkSpeed = 0 end
+            end
+        end
+    end
+
+    if Toggles.AutoGrabLoot and Toggles.AutoGrabLoot.Value then GrabAllLootAction() end
+
+    -- Hitbox Logic
+    if Toggles.HitboxEnabled and Toggles.HitboxEnabled.Value and CHAR_FOLDER then
+        local sizeVal = Options.HitboxSize.Value
+        local transVal = Options.HitboxTrans.Value
+
+        for _, char in pairs(CHAR_FOLDER:GetChildren()) do
+            if char:IsA("Model") and char ~= LP.Character then
+                local head = char:FindFirstChild("Head")
+                if head and head:IsA("BasePart") then
+                    if not originalHeadProps[head] then
+                        originalHeadProps[head] = { Size = head.Size, Transparency = head.Transparency }
+                    end
+                    if head.Size.X ~= sizeVal or head.Transparency ~= transVal then
+                        head.Size = Vector3.new(sizeVal, sizeVal, sizeVal)
+                        head.Transparency = transVal
+                        head.CanCollide = false
+                        head.Massless = true
+                    end
+                end
+            end
+        end
+    else
+        for head, props in pairs(originalHeadProps) do
+            if head and head.Parent then
+                if head.Size ~= props.Size then
+                    head.Size = props.Size
+                    head.Transparency = props.Transparency
+                end
+            end
+        end
+    end
+end)
+
+-- // FIXED NOCLIP
+local NoclipConnection
+local function handleNoclip()
+    if Toggles.NoclipEnabled.Value then
+        if not NoclipConnection then
+            NoclipConnection = RunService.Stepped:Connect(function()
+                if LP.Character then
+                    for _, part in ipairs(LP.Character:GetDescendants()) do
+                        if part:IsA("BasePart") and part.CanCollide then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        end
+    else
+        if NoclipConnection then
+            NoclipConnection:Disconnect()
+            NoclipConnection = nil
+        end
+    end
+end
+
+-- // UI WINDOW SETUP (LINORIALIB)
+local Window = Library:CreateWindow({ Title = 'Pirno.ccx | HVH | Freemium', Center = true, AutoShow = true, TabPadding = 8, MenuFadeTime = 0.2 })
+
+local Tabs = {
+    Combat = Window:AddTab('Combat'),
+    Visuals = Window:AddTab('Visuals'),
+    World = Window:AddTab('World'),
+    Local = Window:AddTab('Local'),
+    ['UI Settings'] = Window:AddTab('UI Settings')
+}
+
+-- COMBAT TAB
+local AimLockBox = Tabs.Combat:AddLeftGroupbox('Mouse AimLock')
+local HitboxUIBox = Tabs.Combat:AddLeftGroupbox('Hidden Hitbox')
+local SilentAimBox = Tabs.Combat:AddRightGroupbox('Silent Aim & AutoShoot')
+local EffectsBox = Tabs.Combat:AddRightGroupbox('Combat Effects')
+
+AimLockBox:AddToggle('AimLockEnabled', { Text = 'Enable Mouse AimLock', Default = false }):AddKeyPicker('AimLockKey', { Default = 'MB2', SyncToggleState = false, Mode = 'Hold', Text = 'AimLock Key' })
+AimLockBox:AddToggle('AimLockWallHack', { Text = 'Ignore Walls (Wallcheck)', Default = false })
+AimLockBox:AddToggle('ShowAimLockFov', { Text = 'Show AimLock FOV', Default = true }):AddColorPicker('AimLockFovColor', { Default = Color3.fromRGB(255, 255, 255), Title = 'AimLock FOV Color' })
+AimLockBox:AddSlider('AimLockFov', { Text = 'AimLock Radius', Default = 150, Min = 50, Max = 800, Rounding = 0 })
+AimLockBox:AddSlider('AimLockSmoothness', { Text = 'Smoothness (Higher = Slower)', Default = 5, Min = 1, Max = 50, Rounding = 0 })
+
+HitboxUIBox:AddToggle('HitboxEnabled', { Text = 'Enable Hidden Hitbox', Default = false })
+HitboxUIBox:AddSlider('HitboxSize', { Text = 'Hitbox Size', Default = 15, Min = 2, Max = 35, Rounding = 1 })
+HitboxUIBox:AddSlider('HitboxTrans', { Text = 'Hitbox Transparency', Default = 0.8, Min = 0, Max = 1, Rounding = 2 })
+
+SilentAimBox:AddToggle('SilentAimEnabled', { Text = 'Enable Silent Aim', Default = false })
+SilentAimBox:AddToggle('SilentWallHack', { Text = 'Ignore Walls (Wallcheck)', Default = false })
+SilentAimBox:AddToggle('ShowSilentFov', { Text = 'Show Silent FOV', Default = true }):AddColorPicker('SilentFovColor', { Default = Color3.fromRGB(255, 50, 50), Title = 'Silent FOV Color' })
+SilentAimBox:AddSlider('SilentAimFov', { Text = 'Silent Aim Radius', Default = 150, Min = 50, Max = 800, Rounding = 0 })
+SilentAimBox:AddDivider()
+SilentAimBox:AddToggle('AutoShootEnabled', { Text = 'Enable AutoShoot', Default = false }):AddKeyPicker('AutoShootKey', { Default = 'V', SyncToggleState = false, Mode = 'Hold', Text = 'AutoShoot Key' })
+
+EffectsBox:AddToggle('ShowAimTracer', { Text = 'Target Line (Mouse to Head)', Default = false })
+EffectsBox:AddToggle('BulletTracer', { Text = 'Bullet Tracer (Laser)', Default = false }):AddColorPicker('TracerColor', { Default = Color3.fromRGB(255, 255, 0), Title = 'Tracer Color' })
+EffectsBox:AddToggle('ShowCrosshair', { Text = 'Custom Crosshair', Default = false })
+EffectsBox:AddSlider('CrosshairLength', { Text = 'Crosshair Length', Default = 10, Min = 2, Max = 30, Rounding = 0 })
+EffectsBox:AddSlider('CrosshairGap', { Text = 'Crosshair Gap', Default = 5, Min = 0, Max = 20, Rounding = 0 })
+EffectsBox:AddDivider()
+EffectsBox:AddToggle('HitSound', { Text = 'Enable Hit Sound', Default = false })
+EffectsBox:AddDropdown('HitSoundType', { Values = { 'Gamesense', 'Rust', 'Neverlose', 'Bepis' }, Default = 1, Multi = false, Text = 'Hit Sound Type' })
+
+-- VISUALS TAB
+local EspBox = Tabs.Visuals:AddLeftGroupbox('Player ESP')
+EspBox:AddToggle('ESP_Enabled', { Text = 'Enable Player ESP', Default = false })
+EspBox:AddToggle('ESP_Name', { Text = 'Show Name', Default = true })
+EspBox:AddToggle('ESP_Box', { Text = 'Show Premium Box', Default = true }):AddColorPicker('ESP_Color', { Default = Color3.fromRGB(255, 255, 255), Title = 'Box Color' })
+EspBox:AddToggle('ESP_HealthBar', { Text = 'Show Health Bar', Default = true })
+EspBox:AddToggle('ESP_Distance', { Text = 'Show Distance', Default = true })
+EspBox:AddToggle('ESP_Weapon', { Text = 'Show Equipped Weapon', Default = false })
+EspBox:AddSlider('ESP_MaxDistance', { Text = 'Max ESP Distance', Default = 5000, Min = 500, Max = 10000, Rounding = 0 })
+
+local WorldVisualsBox = Tabs.Visuals:AddRightGroupbox('World Visuals')
+WorldVisualsBox:AddDropdown('SkyboxSelection', { Values = { 'Standard', 'Among Us', 'Spongebob', 'Deep Space', 'Winter', 'Clouded Sky' }, Default = 1, Multi = false, Text = 'Skybox Theme' })
+Options.SkyboxSelection:OnChanged(function()
+    local selected = Options.SkyboxSelection.Value
+    local skyData = SkyBoxes[selected]
+    if not skyData then return end
+
+    local sky = Lighting:FindFirstChildOfClass("Sky")
+    if not sky then
+        sky = Instance.new("Sky")
+        sky.Parent = Lighting
+    end
+
+    sky.SkyboxBk = skyData.SkyboxBk; sky.SkyboxDn = skyData.SkyboxDn; sky.SkyboxFt = skyData.SkyboxFt
+    sky.SkyboxLf = skyData.SkyboxLf; sky.SkyboxRt = skyData.SkyboxRt; sky.SkyboxUp = skyData.SkyboxUp
+end)
+
+WorldVisualsBox:AddToggle('FullBright', { Text = 'Aggressive Full Bright', Default = false })
+WorldVisualsBox:AddToggle('EveningMode', { Text = 'Evening Ambient (Bright)', Default = false })
+WorldVisualsBox:AddToggle('NoFog', { Text = 'Remove Fog', Default = false })
+
+-- WORLD TAB
+local LootBoxUI = Tabs.World:AddLeftGroupbox('Loot Aura (Vacuum)')
+local CorpseBox = Tabs.World:AddRightGroupbox('Corpse ESP')
+local VehicleBox = Tabs.World:AddRightGroupbox('Vehicle ESP')
+
+LootBoxUI:AddToggle('AutoGrabLoot', { Text = 'Open all lootbox', Default = false }):AddKeyPicker('AutoGrabKey', { Default = 'H', SyncToggleState = true, Mode = 'Toggle', Text = 'Loot Aura Key' })
+LootBoxUI:AddLabel('can fps drop but rich')
+LootBoxUI:AddDivider()
+LootBoxUI:AddToggle('ItemEspEnabled', { Text = 'Item ESP (Ground Loot)', Default = false })
+LootBoxUI:AddSlider('ItemEspDistance', { Text = 'Item Max Distance', Default = 250, Min = 10, Max = 1000, Rounding = 0 })
+LootBoxUI:AddToggle('LootBoxEspEnabled', { Text = 'LootBox ESP', Default = false })
+LootBoxUI:AddSlider('LootBoxEspDistance', { Text = 'LootBox Max Distance', Default = 250, Min = 10, Max = 1000, Rounding = 0 })
+
+CorpseBox:AddToggle('Corpse_Enabled', { Text = 'Corpse ESP', Default = false })
+CorpseBox:AddToggle('Corpse_Name', { Text = 'Corpse Name', Default = true })
+CorpseBox:AddToggle('Corpse_Chams', { Text = 'Corpse Chams', Default = true })
+CorpseBox:AddToggle('Corpse_Distance', { Text = 'Corpse Distance', Default = true })
+
+VehicleBox:AddToggle('Vehicle_Enabled', { Text = 'Vehicle ESP', Default = false })
+VehicleBox:AddToggle('Vehicle_Name', { Text = 'Vehicle Name', Default = true })
+VehicleBox:AddToggle('Vehicle_Chams', { Text = 'Vehicle Chams', Default = true })
+VehicleBox:AddToggle('Vehicle_Distance', { Text = 'Vehicle Distance', Default = true })
+
+-- LOCAL TAB
+local MovementBox = Tabs.Local:AddLeftGroupbox('Safe Mechanics')
+MovementBox:AddToggle('NoclipEnabled', { Text = 'Enable Noclip', Default = false }):AddKeyPicker('NoclipKey', { Default = 'N', SyncToggleState = true, Mode = 'Toggle', Text = 'Noclip Bind' })
+Toggles.NoclipEnabled:OnChanged(handleNoclip)
+
+MovementBox:AddToggle('InfJump', { Text = 'Infinite Jump', Default = false })
+MovementBox:AddToggle('AntiFallDamage', { Text = 'Anti Fall Damage', Default = false })
+MovementBox:AddToggle('ZOMBIE_ANCHOR', { Text = 'Freeze Zombies', Default = false })
+MovementBox:AddToggle('FOV_Active', { Text = 'Custom FOV', Default = false })
+MovementBox:AddSlider('FOV_Value', { Text = 'FOV Value', Default = 110, Min = 70, Max = 120, Rounding = 0 })
+
+-- WATERMARK & SAVES
+Library:SetWatermarkVisibility(true)
+local FrameTimer = tick(); local FrameCounter = 0; local FPS = 60
+RunService.RenderStepped:Connect(function()
+    FrameCounter += 1; if (tick() - FrameTimer) >= 1 then FPS = FrameCounter; FrameTimer = tick(); FrameCounter = 0 end
+    local ping = "0"; pcall(function() ping = math.floor(Stats.Network.ServerStatsItem['Data Ping']:GetValue()) end)
+    Library:SetWatermark(('Pirno.ccx | HVH | %s FPS | %s MS'):format(math.floor(FPS), ping))
+end)
+
+Library.KeybindFrame.Visible = true
+local MenuGroup = Tabs['UI Settings']:AddLeftGroupbox('Menu')
+MenuGroup:AddButton('Unload Script', function() Library:Unload() end)
+MenuGroup:AddLabel('Menu Bind'):AddKeyPicker('MenuKeybind', { Default = 'O', NoUI = true, Text = 'Menu keybind' })
+Library.ToggleKeybind = Options.MenuKeybind
+
+ThemeManager:SetLibrary(Library); SaveManager:SetLibrary(Library); SaveManager:IgnoreThemeSettings(); SaveManager:SetIgnoreIndexes({ 'MenuKeybind' })
+ThemeManager:SetFolder('PirnoCCX'); SaveManager:SetFolder('PirnoCCX/Configs')
+SaveManager:BuildConfigSection(Tabs['UI Settings']); ThemeManager:ApplyToTab(Tabs['UI Settings'])
+SaveManager:LoadAutoloadConfig()
