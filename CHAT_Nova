@@ -210,8 +210,6 @@ local function MainFunction()
     local ChatHistory = G2L.ChatHistory
     local SendAsync = G2L.SendButton
     local SourceChat = G2L.SourceChat
-    local ChatExample = G2L.ChatTemplate
-    ChatExample.Visible = false
     
     local Developer = {
         "C00lHamo0t2025",
@@ -278,33 +276,33 @@ local function MainFunction()
 
     getgenv().trezchat = WebSocket.connect("wss://free.blr2.piesocket.com/v3/1?api_key=eLudeCBiiTiQSr6DWJPMPfpZK9B6ghEu90ZbJwzm&notify_self=1")
 
-local function sendMessage()
-    if SourceChat.Text == "" then return end
-    
-    HandleCommand(SourceChat.Text)
-
-    task.spawn(function()
-        local DataContent = {
-            type = "message",
-            username = Player.Name,
-            message = SourceChat.Text,
-            userid = Player.UserId,
-            gamePlaying = MarketplaceService:GetProductInfo(game.PlaceId).Name,
-            gameid = game.PlaceId
-        }
+    local function sendMessage()
+        if SourceChat.Text == "" then return end
         
-        local success, result = pcall(function()
-            getgenv().trezchat:Send(HttpService:JSONEncode(DataContent))
+        HandleCommand(SourceChat.Text)
+
+        task.spawn(function()
+            local DataContent = {
+                type = "message",
+                username = Player.Name,
+                message = SourceChat.Text,
+                userid = Player.UserId,
+                gamePlaying = MarketplaceService:GetProductInfo(game.PlaceId).Name,
+                gameid = game.PlaceId
+            }
+            
+            local success, result = pcall(function()
+                getgenv().trezchat:Send(HttpService:JSONEncode(DataContent))
+            end)
+            
+            if not success then
+                warn("Failed to send message:", result)
+            end
         end)
-        
-        if not success then
-            warn("Failed to send message:", result)
-        end
-    end)
 
-    SendSound:Play()
-    SourceChat.Text = ""
-end
+        SendSound:Play()
+        SourceChat.Text = ""
+    end
 
     SendAsync.MouseButton1Click:Connect(sendMessage)
     SourceChat.FocusLost:Connect(function(enterPressed)
@@ -318,21 +316,63 @@ end
             return
         end
 
-        local Clone = ChatExample:Clone()
-        Clone.Name = (Decoded.username or "Unknown") .. " Chats"
-        Clone.MessageSource.Text = Decoded.message or ""
-        Clone.PlayerIcon.Image = "rbxthumb://type=AvatarHeadShot&id=" .. (Decoded.userid or 0) .. "&w=420&h=420"
+        -- Crear mensaje directamente (sin ChatExample)
+        local MessageFrame = Instance.new("Frame")
+        MessageFrame.Name = (Decoded.username or "Unknown") .. "_Message"
+        MessageFrame.BackgroundTransparency = 1
+        MessageFrame.Size = UDim2.new(1, -10, 0, 50)
+        MessageFrame.Parent = ChatHistory
+
+        local PlayerIcon = Instance.new("ImageLabel")
+        PlayerIcon.Name = "PlayerIcon"
+        PlayerIcon.BackgroundTransparency = 1
+        PlayerIcon.Size = UDim2.new(0, 35, 0, 35)
+        PlayerIcon.Position = UDim2.new(0, 5, 0, 5)
+        PlayerIcon.Image = "rbxthumb://type=AvatarHeadShot&id=" .. (Decoded.userid or 0) .. "&w=420&h=420"
+        PlayerIcon.Parent = MessageFrame
+
+        local IconCorner = Instance.new("UICorner")
+        IconCorner.CornerRadius = UDim.new(1, 0)
+        IconCorner.Parent = PlayerIcon
+
+        local SenderLabel = Instance.new("TextLabel")
+        SenderLabel.Name = "Sender"
+        SenderLabel.BackgroundTransparency = 1
+        SenderLabel.Size = UDim2.new(1, -50, 0, 18)
+        SenderLabel.Position = UDim2.new(0, 45, 0, 5)
+        SenderLabel.Font = Enum.Font.SourceSansBold
+        SenderLabel.TextSize = 15
+        SenderLabel.TextXAlignment = Enum.TextXAlignment.Left
+        
+        if table.find(Developer, Decoded.username) then
+            SenderLabel.Text = Decoded.username .. " ( Dev ) ( " .. (Decoded.gamePlaying or "N/A") .. " )"
+            SenderLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
+        else
+            SenderLabel.Text = Decoded.username .. " ( " .. (Decoded.gamePlaying or "N/A") .. " )"
+            SenderLabel.TextColor3 = Color3.fromRGB(255, 129, 0)
+        end
+        SenderLabel.Parent = MessageFrame
+
+        local MessageLabel = Instance.new("TextLabel")
+        MessageLabel.Name = "MessageSource"
+        MessageLabel.BackgroundTransparency = 1
+        MessageLabel.Size = UDim2.new(1, -50, 0, 25)
+        MessageLabel.Position = UDim2.new(0, 45, 0, 23)
+        MessageLabel.Font = Enum.Font.SourceSans
+        MessageLabel.TextSize = 14
+        MessageLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        MessageLabel.TextWrapped = true
+        MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
+        MessageLabel.TextYAlignment = Enum.TextYAlignment.Top
+        MessageLabel.Text = Decoded.message or ""
+        MessageLabel.Parent = MessageFrame
+
+        -- Ajustar altura según contenido
+        local textHeight = MessageLabel.TextBounds.Y
+        MessageLabel.Size = UDim2.new(1, -50, 0, math.max(25, textHeight + 5))
+        MessageFrame.Size = UDim2.new(1, -10, 0, 40 + math.max(0, textHeight - 20))
 
         NoticeSound:Play()
-
-        if table.find(Developer, Decoded.username) then
-            Clone.Sender.Text = Decoded.username .. " ( Dev ) ( " .. (Decoded.gamePlaying or "N/A") .. " )"
-        else
-            Clone.Sender.Text = Decoded.username .. " ( " .. (Decoded.gamePlaying or "N/A") .. " )"
-        end
-        
-        Clone.Parent = ChatHistory
-        Clone.Visible = true
     end)
 
     local welcomeMsg = {
@@ -351,7 +391,6 @@ end
         "if you saw any bug you can send the screen record of the issue to our discord server in #report channel so we can sole it"
     }
     
-    -- task.spawn separado para el bucle de mensajes
     task.spawn(function()
         local msgIndex = 1
         while true do
@@ -377,7 +416,7 @@ end
 end
 task.spawn(MainFunction)
 
---// Lógica de Arrastre (Optimizada sin TweenService ni Memory Leaks)
+--// Lógica de Arrastre
 local function UIDragFunction()
     local frame = G2L.Main
     local dragging, dragInput, dragStart, startPos
