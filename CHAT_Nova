@@ -1,0 +1,494 @@
+local G2L = {};
+
+if getgenv().trezchat then
+	warn("X Chat is already loaded.")
+	getgenv().trezchat:close()
+	return
+end
+
+local BannedPeople = {}
+local AdminArg = {}
+
+--// Servicios cacheados para mayor velocidad
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local UserInputService = game:GetService("UserInputService")
+local Player = Players.LocalPlayer
+
+-- StarterGui.TrezChat
+G2L.ScreenGui = Instance.new("ScreenGui")
+G2L.ScreenGui.Name = "XChat"
+G2L.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+G2L.ScreenGui.Parent = game:GetService("CoreGui")
+
+-- StarterGui.TrezChat.Main
+G2L.Main = Instance.new("Frame")
+G2L.Main.Name = "Main"
+G2L.Main.ZIndex = 2
+G2L.Main.BorderSizePixel = 0
+G2L.Main.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+G2L.Main.AnchorPoint = Vector2.new(0.5, 0.5)
+G2L.Main.Size = UDim2.new(0.38, 0, 0.54, 0)
+G2L.Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+G2L.Main.BorderColor3 = Color3.fromRGB(0, 0, 0)
+G2L.Main.BackgroundTransparency = 0.05
+G2L.Main.Parent = G2L.ScreenGui
+
+-- StarterGui.TrezChat.Main.Line
+G2L.Line = Instance.new("Frame")
+G2L.Line.Name = "Line"
+G2L.Line.ZIndex = 2
+G2L.Line.BorderSizePixel = 0
+G2L.Line.BackgroundColor3 = Color3.fromRGB(255, 141, 0)
+G2L.Line.AnchorPoint = Vector2.new(0.5, 0.5)
+G2L.Line.Size = UDim2.new(0.9, 0, 0.005, 0)
+G2L.Line.Position = UDim2.new(0.5, 0, 0.15, 0)
+G2L.Line.BorderColor3 = Color3.fromRGB(0, 0, 0)
+G2L.Line.Parent = G2L.Main
+
+-- StarterGui.TrezChat.Main.Shadow
+G2L.Shadow = Instance.new("Frame")
+G2L.Shadow.Name = "Shadow"
+G2L.Shadow.ZIndex = 2
+G2L.Shadow.BorderSizePixel = 0
+G2L.Shadow.BackgroundColor3 = Color3.fromRGB(255, 141, 0)
+G2L.Shadow.AnchorPoint = Vector2.new(0.5, 0.5)
+G2L.Shadow.Size = UDim2.new(1, 0, 1, 0)
+G2L.Shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
+G2L.Shadow.BorderColor3 = Color3.fromRGB(0, 0, 0)
+G2L.Shadow.BackgroundTransparency = 0.55
+G2L.Shadow.Parent = G2L.Main
+
+-- StarterGui.TrezChat.Main.Shadow.UIGradient
+G2L.ShadowGradient = Instance.new("UIGradient")
+G2L.ShadowGradient.Rotation = -90
+G2L.ShadowGradient.Transparency = NumberSequence.new{
+    NumberSequenceKeypoint.new(0, 0.2),
+    NumberSequenceKeypoint.new(0.1, 0.7),
+    NumberSequenceKeypoint.new(0.3, 0.9),
+    NumberSequenceKeypoint.new(1, 1)
+}
+G2L.ShadowGradient.Parent = G2L.Shadow
+
+G2L.ShadowCorner = Instance.new("UICorner")
+G2L.ShadowCorner.Parent = G2L.Shadow
+
+-- StarterGui.TrezChat.Main.UIStroke
+G2L.MainStroke = Instance.new("UIStroke")
+G2L.MainStroke.Color = Color3.fromRGB(255, 145, 10)
+G2L.MainStroke.Parent = G2L.Main
+
+-- StarterGui.TrezChat.Main.Bg
+G2L.Background = Instance.new("ImageLabel")
+G2L.Background.Name = "Bg"
+G2L.Background.BorderSizePixel = 0
+G2L.Background.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G2L.Background.ImageTransparency = 0.86
+G2L.Background.ImageColor3 = Color3.fromRGB(255, 141, 0)
+G2L.Background.AnchorPoint = Vector2.new(0.5, 0.5)
+G2L.Background.Image = "rbxassetid://15175796726"
+G2L.Background.Size = UDim2.new(1, 0, 1, 0)
+G2L.Background.BorderColor3 = Color3.fromRGB(0, 0, 0)
+G2L.Background.BackgroundTransparency = 1
+G2L.Background.Position = UDim2.new(0.5, 0, 0.5, 0)
+G2L.Background.Parent = G2L.Main
+
+G2L.BackgroundCorner = Instance.new("UICorner")
+G2L.BackgroundCorner.Parent = G2L.Background
+
+-- StarterGui.TrezChat.Main.SourceChat
+G2L.SourceChat = Instance.new("TextBox")
+G2L.SourceChat.Name = "SourceChat"
+G2L.SourceChat.TextXAlignment = Enum.TextXAlignment.Left
+G2L.SourceChat.ZIndex = 3
+G2L.SourceChat.BorderSizePixel = 0
+G2L.SourceChat.TextWrapped = true
+G2L.SourceChat.TextSize = 14
+G2L.SourceChat.TextColor3 = Color3.fromRGB(255, 255, 255)
+G2L.SourceChat.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+G2L.SourceChat.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+G2L.SourceChat.Size = UDim2.new(0, 240, 0.1, 0)
+G2L.SourceChat.Position = UDim2.new(0.03, 0, 0.85, 0)
+G2L.SourceChat.BorderColor3 = Color3.fromRGB(0, 0, 0)
+G2L.SourceChat.Text = ""
+G2L.SourceChat.PlaceholderText = "Send your message here..."
+G2L.SourceChat.BackgroundTransparency = 0.5
+G2L.SourceChat.Parent = G2L.Main
+
+G2L.SourceChatCorner = Instance.new("UICorner")
+G2L.SourceChatCorner.CornerRadius = UDim.new(0, 4)
+G2L.SourceChatCorner.Parent = G2L.SourceChat
+
+G2L.SourceChatPadding = Instance.new("UIPadding")
+G2L.SourceChatPadding.PaddingLeft = UDim.new(0, 5)
+G2L.SourceChatPadding.Parent = G2L.SourceChat
+
+G2L.MainCorner = Instance.new("UICorner")
+G2L.MainCorner.Parent = G2L.Main
+
+-- StarterGui.TrezChat.Main.SendAsync
+G2L.SendButton = Instance.new("ImageButton")
+G2L.SendButton.Name = "SendAsync"
+G2L.SendButton.BorderSizePixel = 0
+G2L.SendButton.BackgroundTransparency = 1
+G2L.SendButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G2L.SendButton.ImageColor3 = Color3.fromRGB(255, 141, 0)
+G2L.SendButton.ZIndex = 3
+G2L.SendButton.AnchorPoint = Vector2.new(0.5, 0.5)
+G2L.SendButton.Image = "rbxassetid://18940312887"
+G2L.SendButton.Size = UDim2.new(0.1, 0, 0.1, 0)
+G2L.SendButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
+G2L.SendButton.Position = UDim2.new(0.9, 0, 0.9, 0)
+G2L.SendButton.Parent = G2L.Main
+
+G2L.SendButtonAspect = Instance.new("UIAspectRatioConstraint")
+G2L.SendButtonAspect.Parent = G2L.SendButton
+
+-- StarterGui.TrezChat.Main.TextLabel
+G2L.TitleLabel = Instance.new("TextLabel")
+G2L.TitleLabel.TextWrapped = true
+G2L.TitleLabel.BorderSizePixel = 0
+G2L.TitleLabel.TextSize = 18
+G2L.TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+G2L.TitleLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G2L.TitleLabel.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+G2L.TitleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+G2L.TitleLabel.BackgroundTransparency = 1
+G2L.TitleLabel.RichText = true
+G2L.TitleLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+G2L.TitleLabel.Size = UDim2.new(0.84, 0, 0.1, 0)
+G2L.TitleLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+G2L.TitleLabel.Text = "<font color='rgb(242, 111, 2)'><font face='Arial'>X</font></font> <font color='rgb(255, 255, 255)'>Chat V1</font>"
+G2L.TitleLabel.Position = UDim2.new(0.46, 0, 0.08, 0)
+G2L.TitleLabel.Parent = G2L.Main
+
+-- StarterGui.TrezChat.Main.ChatHistory
+G2L.ChatHistory = Instance.new("ScrollingFrame")
+G2L.ChatHistory.Name = "ChatHistory"
+G2L.ChatHistory.Active = true
+G2L.ChatHistory.ZIndex = 3
+G2L.ChatHistory.BorderSizePixel = 0
+G2L.ChatHistory.TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
+G2L.ChatHistory.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+G2L.ChatHistory.BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
+G2L.ChatHistory.Size = UDim2.new(0.94, 0, 0.62, 0)
+G2L.ChatHistory.ScrollBarImageColor3 = Color3.fromRGB(255, 141, 0)
+G2L.ChatHistory.Position = UDim2.new(0.03, 0, 0.18, 0)
+G2L.ChatHistory.BorderColor3 = Color3.fromRGB(0, 0, 0)
+G2L.ChatHistory.ScrollBarThickness = 3
+G2L.ChatHistory.BackgroundTransparency = 0.65
+G2L.ChatHistory.Parent = G2L.Main
+
+G2L.ChatLayout = Instance.new("UIListLayout")
+G2L.ChatLayout.Padding = UDim.new(0, 3)
+G2L.ChatLayout.SortOrder = Enum.SortOrder.LayoutOrder
+G2L.ChatLayout.Parent = G2L.ChatHistory
+
+G2L.ChatLayoutCorner = Instance.new("UICorner")
+G2L.ChatLayoutCorner.CornerRadius = UDim.new(0, 4)
+G2L.ChatLayoutCorner.Parent = G2L.ChatLayout
+
+-- StarterGui.TrezChat.Main.ChatHistory.ChatExample
+G2L.ChatTemplate = Instance.new("Frame")
+G2L.ChatTemplate.Name = "ChatExample"
+G2L.ChatTemplate.ZIndex = 3
+G2L.ChatTemplate.BorderSizePixel = 0
+G2L.ChatTemplate.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G2L.ChatTemplate.Size = UDim2.new(0, 256, 0, 29)
+G2L.ChatTemplate.Position = UDim2.new(0, 0, 0, 0)
+G2L.ChatTemplate.BorderColor3 = Color3.fromRGB(0, 0, 0)
+G2L.ChatTemplate.BackgroundTransparency = 1
+G2L.ChatTemplate.Parent = G2L.ChatHistory
+
+G2L.PlayerIcon = Instance.new("ImageLabel")
+G2L.PlayerIcon.Name = "PlayerIcon"
+G2L.PlayerIcon.ZIndex = 4
+G2L.PlayerIcon.BorderSizePixel = 0
+G2L.PlayerIcon.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G2L.PlayerIcon.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+G2L.PlayerIcon.Size = UDim2.new(0, 60, 0, 29)
+G2L.PlayerIcon.BorderColor3 = Color3.fromRGB(0, 0, 0)
+G2L.PlayerIcon.BackgroundTransparency = 1
+G2L.PlayerIcon.Parent = G2L.ChatTemplate
+
+G2L.PlayerIconAspect = Instance.new("UIAspectRatioConstraint")
+G2L.PlayerIconAspect.Parent = G2L.PlayerIcon
+
+G2L.MessageLabel = Instance.new("TextLabel")
+G2L.MessageLabel.Name = "MessageSource"
+G2L.MessageLabel.TextWrapped = true
+G2L.MessageLabel.ZIndex = 4
+G2L.MessageLabel.BorderSizePixel = 0
+G2L.MessageLabel.TextSize = 14
+G2L.MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
+G2L.MessageLabel.TextScaled = true
+G2L.MessageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G2L.MessageLabel.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+G2L.MessageLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+G2L.MessageLabel.BackgroundTransparency = 1
+G2L.MessageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+G2L.MessageLabel.Size = UDim2.new(-0.16, 234, 0.07044, 14)
+G2L.MessageLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+G2L.MessageLabel.Text = "yo chat the 67 meme is still massive woww"
+G2L.MessageLabel.Position = UDim2.new(0.51, 0, 0.69978, 0)
+G2L.MessageLabel.Parent = G2L.ChatTemplate
+
+G2L.SenderLabel = Instance.new("TextLabel")
+G2L.SenderLabel.Name = "Sender"
+G2L.SenderLabel.ZIndex = 4
+G2L.SenderLabel.BorderSizePixel = 0
+G2L.SenderLabel.TextSize = 15
+G2L.SenderLabel.TextXAlignment = Enum.TextXAlignment.Left
+G2L.SenderLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+G2L.SenderLabel.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Bold, Enum.FontStyle.Normal)
+G2L.SenderLabel.TextColor3 = Color3.fromRGB(255, 129, 0)
+G2L.SenderLabel.BackgroundTransparency = 1
+G2L.SenderLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+G2L.SenderLabel.Size = UDim2.new(-0.51033, 234, -0.14276, 14)
+G2L.SenderLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+G2L.SenderLabel.Text = "C00lHamo0t2025"
+G2L.SenderLabel.Position = UDim2.new(0.33983, 0, 0.31819, 0)
+G2L.SenderLabel.Parent = G2L.ChatTemplate
+
+G2L.ChatPadding = Instance.new("UIPadding")
+G2L.ChatPadding.PaddingTop = UDim.new(0, 5)
+G2L.ChatPadding.PaddingLeft = UDim.new(0, 5)
+G2L.ChatPadding.Parent = G2L.ChatHistory
+
+--// Lógica Principal
+local function MainFunction()
+    local NoticeSound = Instance.new("Sound")
+    NoticeSound.SoundId = "rbxassetid://2865226708"
+    NoticeSound.Name = "NoticeReciveSound"
+    NoticeSound.Parent = G2L.ScreenGui
+    
+    local SendSound = Instance.new("Sound")
+    SendSound.SoundId = "rbxassetid://5485567028"
+    SendSound.Name = "SendSound"
+    SendSound.Parent = G2L.ScreenGui
+    
+    local Main = G2L.Main
+    local ChatHistory = G2L.ChatHistory
+    local SendAsync = G2L.SendButton
+    local SourceChat = G2L.SourceChat
+    local ChatExample = G2L.ChatTemplate
+    ChatExample.Visible = false
+    
+    local Developer = {
+        "C00lHamo0t2025",
+        "ikik9i4"
+    }
+
+    local function CheckIfAdmin(player)
+        return table.find(Developer, player.Name) ~= nil
+    end
+
+    local function FindPlayer(str)
+        str = string.lower(str)
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if string.sub(string.lower(plr.Name), 1, #str) == str then
+                return plr
+            end
+        end
+    end
+
+    function AdminArg.Ban(player)
+        if not CheckIfAdmin(Player) or not player then return end
+        table.insert(BannedPeople, player.UserId)
+    end
+
+    function AdminArg.warn(player, reason)
+        if not CheckIfAdmin(Player) or not player then return end
+
+        local DataContent = {
+            type = "message",
+            username = "Server",
+            message = player.Name .. " has been warned by " .. Player.Name .. " for " .. (reason or "No reason"),
+            userid = 1,
+            gamePlaying = "DataBase",
+            gameid = game.PlaceId
+        }
+
+        getgenv().trezchat:Send(HttpService:JSONEncode(DataContent))
+    end
+
+    function AdminArg.unban(player)
+        if not CheckIfAdmin(Player) or not player then return end
+
+        local index = table.find(BannedPeople, player.UserId)
+        if index then
+            table.remove(BannedPeople, index)
+        end
+    end
+
+    local AdminCommands = {
+        ban = AdminArg.Ban,
+        warn = AdminArg.warn,
+        unban = AdminArg.unban
+    }
+
+    local function HandleCommand(text)
+        local split = string.split(text, " ")
+        if split[1] ~= "?" then return end
+
+        local targetPlayer = FindPlayer(split[3])
+        if AdminCommands[split[2]] then
+            AdminCommands[split[2]](targetPlayer, split[4])
+        end
+    end
+
+    getgenv().trezchat = WebSocket.connect("wss://free.blr2.piesocket.com/v3/1?api_key=eLudeCBiiTiQSr6DWJPMPfpZK9B6ghEu90ZbJwzm&notify_self=1")
+
+local function sendMessage()
+    if SourceChat.Text == "" then return end
+    
+    HandleCommand(SourceChat.Text)
+
+    task.spawn(function()
+        local DataContent = {
+            type = "message",
+            username = Player.Name,
+            message = SourceChat.Text,
+            userid = Player.UserId,
+            gamePlaying = MarketplaceService:GetProductInfo(game.PlaceId).Name,
+            gameid = game.PlaceId
+        }
+        
+        local success, result = pcall(function()
+            getgenv().trezchat:Send(HttpService:JSONEncode(DataContent))
+        end)
+        
+        if not success then
+            warn("Failed to send message:", result)
+        end
+    end)
+
+    SendSound:Play()
+    SourceChat.Text = ""
+end
+
+    SendAsync.MouseButton1Click:Connect(sendMessage)
+    SourceChat.FocusLost:Connect(function(enterPressed)
+        if enterPressed then sendMessage() end
+    end)
+
+    getgenv().trezchat.OnMessage:Connect(function(msg)
+        local success, Decoded = pcall(HttpService.JSONDecode, HttpService, msg)
+        if not success then
+            warn("Failed to decode message:", msg)
+            return
+        end
+
+        local Clone = ChatExample:Clone()
+        Clone.Name = (Decoded.username or "Unknown") .. " Chats"
+        Clone.MessageSource.Text = Decoded.message or ""
+        Clone.PlayerIcon.Image = "rbxthumb://type=AvatarHeadShot&id=" .. (Decoded.userid or 0) .. "&w=420&h=420"
+
+        NoticeSound:Play()
+
+        if table.find(Developer, Decoded.username) then
+            Clone.Sender.Text = Decoded.username .. " ( Dev ) ( " .. (Decoded.gamePlaying or "N/A") .. " )"
+        else
+            Clone.Sender.Text = Decoded.username .. " ( " .. (Decoded.gamePlaying or "N/A") .. " )"
+        end
+        
+        Clone.Parent = ChatHistory
+        Clone.Visible = true
+    end)
+
+    local welcomeMsg = {
+        type = "message",
+        username = "Server",
+        message = "Make Sure To Join Our Discord Server = ( https://discord.gg/TPtrJceCva )",
+        userid = 1,
+        gamePlaying = "DataBase",
+        gameid = game.PlaceId
+    }
+    getgenv().trezchat:Send(HttpService:JSONEncode(welcomeMsg))
+
+    local messages = {
+        "Be Careful Do Not Share Your Personal Info !!",
+        "Make Sure To Join Our Discord Server = ( https://discord.gg/TPtrJceCva )",
+        "if you saw any bug you can send the screen record of the issue to our discord server in #report channel so we can sole it"
+    }
+    
+    -- task.spawn separado para el bucle de mensajes
+    task.spawn(function()
+        local msgIndex = 1
+        while true do
+            task.wait(1000) 
+            
+            local DataContent = {
+                type = "message",
+                username = "Server",
+                message = messages[msgIndex],
+                userid = 1,
+                gamePlaying = "DataBase",
+                gameid = game.PlaceId
+            }
+            
+            getgenv().trezchat:Send(HttpService:JSONEncode(DataContent))
+            
+            msgIndex = msgIndex + 1
+            if msgIndex > #messages then
+                msgIndex = 1
+            end
+        end
+    end)
+end
+task.spawn(MainFunction)
+
+--// Lógica de Arrastre (Optimizada sin TweenService ni Memory Leaks)
+local function UIDragFunction()
+    local frame = G2L.Main
+    local dragging, dragInput, dragStart, startPos
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+        end
+    end)
+
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale, startPos.X.Offset + delta.X,
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+end
+task.spawn(UIDragFunction)
+
+--// Lógica del Canvas del Chat
+local function CanvasFunction()
+    local ChatHistory = G2L.ChatHistory
+    local Layout = G2L.ChatLayout
+    
+    ChatHistory.CanvasSize = UDim2.new(0, 0, 0, 0)
+    
+    local function Update()
+        ChatHistory.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y + 10)
+    end
+    
+    Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(Update)
+end
+task.spawn(CanvasFunction)
+
+return G2L.ScreenGui
