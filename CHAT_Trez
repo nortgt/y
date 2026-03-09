@@ -10,12 +10,15 @@ local BannedPeople = {}
 local NormalArg = {}
 local AdminArg = {}
 
--- CORREGIDO: Eliminado el bucle que causaba error (Oplayer no existía)
+-- MEJORA: Detectar si debe usar PlayerGui (para traducción) o CoreGui
+local RunService = game:GetService("RunService")
+local targetParent = (RunService:IsStudio() and game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")) or game:GetService("CoreGui")
 
 -- StarterGui.TrezChat
-G2L.ScreenGui = Instance.new("ScreenGui", game.CoreGui);
+G2L.ScreenGui = Instance.new("ScreenGui", targetParent);
 G2L.ScreenGui.Name = "TrezChat";
 G2L.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
+G2L.ScreenGui.ResetOnSpawn = false; -- Importante: No resetear al morir
 
 -- StarterGui.TrezChat.Main
 G2L.Main = Instance.new("Frame", G2L.ScreenGui);
@@ -248,7 +251,7 @@ G2L.ChatPadding = Instance.new("UIPadding", G2L.ChatHistory);
 G2L.ChatPadding.PaddingTop = UDim.new(0, 5);
 G2L.ChatPadding.PaddingLeft = UDim.new(0, 5);
 
--- StarterGui.TrezChat.Main.Main Script (OPTIMIZADO)
+-- StarterGui.TrezChat.Main.Main Script (MODIFICADO para traducción)
 local function MainFunction()
     local script = G2L.MainScript;
     
@@ -269,12 +272,12 @@ local function MainFunction()
     local ChatExample = ChatHistory.ChatExample
     ChatExample.Visible = false
     
-    -- Servicios (UNA SOLA VEZ)
+    -- Servicios
     local Players = game:GetService("Players")
     local HttpService = game:GetService("HttpService")
     local MarketplaceService = game:GetService("MarketplaceService")
+    local TextService = game:GetService("TextService") -- Para traducción
     
-    -- CORREGIDO: Eliminadas variables duplicadas
     local Oplayer = Players.LocalPlayer
     
     -- Lista de desarrolladores
@@ -398,7 +401,21 @@ local function MainFunction()
         local Clone = ChatExample:Clone()
         Clone.Name = (Decoded.username or "Unknown") .. " Chats"
         Clone.Parent = ChatHistory
-        Clone.MessageSource.Text = Decoded.message or ""
+        
+        -- MEJORA: Si el mensaje no está en el idioma del jugador, traducirlo
+        local messageText = Decoded.message or ""
+        
+        -- Intentar traducir automáticamente (si está disponible)
+        local successTranslate, translatedText = pcall(function()
+            return TextService:TranslateAsync(messageText, TextService.SourceLanguageAutoDetect, Players.LocalPlayer.LocaleId)
+        end)
+        
+        if successTranslate and translatedText then
+            Clone.MessageSource.Text = translatedText
+        else
+            Clone.MessageSource.Text = messageText
+        end
+        
         Clone.PlayerIcon.Image = "rbxthumb://type=AvatarHeadShot&id=" .. (Decoded.userid or 0) .. "&w=420&h=420"
         
         NoticeSound:Play()
@@ -422,7 +439,7 @@ local function MainFunction()
     }
     getgenv().trezchat:Send(HttpService:JSONEncode(welcomeMsg))
 
-    -- OPTIMIZADO: Bucle de mensajes automáticos (ahora usa un timer más eficiente)
+    -- Mensajes automáticos
     local messages = {
         "Be Careful Do Not Share Your Personal Info !!",
         "Make Sure To Join Our Discord Server = ( https://discord.gg/TPtrJceCva )",
@@ -431,7 +448,7 @@ local function MainFunction()
     
     local msgIndex = 1
     while true do
-        wait(1000) -- 1 segundo entre mensajes (optimizado de 1000 a 1000? igual pero más claro)
+        wait(1000)
         
         local DataContent = {
             type = "message",
