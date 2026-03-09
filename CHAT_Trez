@@ -185,6 +185,10 @@ G2L.ChatLayout.Padding = UDim.new(0, 3)
 G2L.ChatLayout.SortOrder = Enum.SortOrder.LayoutOrder
 G2L.ChatLayout.Parent = G2L.ChatHistory
 
+G2L.ChatLayoutCorner = Instance.new("UICorner")
+G2L.ChatLayoutCorner.CornerRadius = UDim.new(0, 4)
+G2L.ChatLayoutCorner.Parent = G2L.ChatLayout
+
 -- StarterGui.TrezChat.Main.ChatHistory.ChatExample
 G2L.ChatTemplate = Instance.new("Frame")
 G2L.ChatTemplate.Name = "ChatExample"
