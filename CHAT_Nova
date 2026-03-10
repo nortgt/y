@@ -6,9 +6,6 @@ if getgenv().novachat then
 	return
 end
 
-local BannedPeople = {}
-local AdminArg = {}
-
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
@@ -162,88 +159,10 @@ local function MainFunction()
         "Roun95"
     }
 
-    local function CheckIfAdmin(player)
-        return table.find(Developer, player.Name) ~= nil
-    end
-
-    local function FindPlayer(str)
-        str = string.lower(str)
-        for _, plr in ipairs(Players:GetPlayers()) do
-            if string.sub(string.lower(plr.Name), 1, #str) == str then
-                return plr
-            end
-        end
-    end
-
-    function AdminArg.Ban(player)
-        if not CheckIfAdmin(Player) or not player then return end
-        table.insert(BannedPeople, player.UserId)
-    end
-
-function AdminArg.warn(player, reason)
-    if not CheckIfAdmin(Player) then 
-        warn("No tienes permisos de administrador")
-        return 
-    end
-    
-    if not player then 
-        warn("Jugador no encontrado")
-        return 
-    end
-
-    local warnReason = reason or "No reason specified"
-    
-    local DataContent = {
-        type = "message",
-        username = "Server",
-        message = player.Name .. " has been warned by " .. Player.Name .. " for " .. warnReason,
-        userid = 1,
-        gamePlaying = "DataBase",
-        gameid = game.PlaceId
-    }
-
-    local success, result = pcall(function()
-        getgenv().novachat:Send(HttpService:JSONEncode(DataContent))
-    end)
-    
-    if success then
-        print("Warn enviado correctamente a " .. player.Name)
-    else
-        warn("Error al enviar warn:", result)
-    end
-end
-
-    function AdminArg.unban(player)
-        if not CheckIfAdmin(Player) or not player then return end
-
-        local index = table.find(BannedPeople, player.UserId)
-        if index then
-            table.remove(BannedPeople, index)
-        end
-    end
-
-    local AdminCommands = {
-        ban = AdminArg.Ban,
-        warn = AdminArg.warn,
-        unban = AdminArg.unban
-    }
-
-    local function HandleCommand(text)
-        local split = string.split(text, " ")
-        if split[1] ~= "?" then return end
-
-        local targetPlayer = FindPlayer(split[3])
-        if AdminCommands[split[2]] then
-            AdminCommands[split[2]](targetPlayer, split[4])
-        end
-    end
-
     getgenv().novachat = WebSocket.connect("wss://free.blr2.piesocket.com/v3/1?api_key=eLudeCBiiTiQSr6DWJPMPfpZK9B6ghEu90ZbJwzm&notify_self=1")
 
     local function sendMessage()
         if SourceChat.Text == "" then return end
-        
-        HandleCommand(SourceChat.Text)
 
         task.spawn(function()
             local DataContent = {
@@ -308,7 +227,7 @@ end
         SenderLabel.TextXAlignment = Enum.TextXAlignment.Left
         
         if table.find(Developer, Decoded.username) then
-            SenderLabel.Text = Decoded.username .. " ( Owner ) " -- ( " .. (Decoded.gamePlaying or "N/A") .. " )
+            SenderLabel.Text = Decoded.username .. " ( Owner )"
             SenderLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
         else
             SenderLabel.Text = Decoded.username .. " ( " .. (Decoded.gamePlaying or "N/A") .. " )"
@@ -333,40 +252,7 @@ end
         local textHeight = MessageLabel.TextBounds.Y
         MessageLabel.Size = UDim2.new(1, -50, 0, math.max(25, textHeight + 5))
         MessageFrame.Size = UDim2.new(1, -10, 0, 40 + math.max(0, textHeight - 20))
-
-        -- NoticeSound:Play()
     end)
---[[
-    local messages = {
-        "Join our Discord ( https://discord.gg/Q9R5FDapth )",
-        "!! Be careful do not share your personal info !!",
-        "Use common sense. Toxicity, harassment, and offensive language are not allowed",
-        "Spam, flooding, and excessive blocks of text are prohibited.",
-        "External links, promotion of other servers, scripts or external services are not allowed."
-    }
-    
-    task.spawn(function()
-        local msgIndex = 1
-        while true do
-            task.wait(5000) 
-            
-            local DataContent = {
-                type = "message",
-                username = "Server",
-                message = messages[msgIndex],
-                userid = 1,
-                gamePlaying = "DataBase",
-                gameid = game.PlaceId
-            }
-            
-            getgenv().novachat:Send(HttpService:JSONEncode(DataContent))
-            
-            msgIndex = msgIndex + 1
-            if msgIndex > #messages then
-                msgIndex = 1
-            end
-        end
-    end)]]
 end
 task.spawn(MainFunction)
 
@@ -419,5 +305,546 @@ local function CanvasFunction()
     Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(Update)
 end
 task.spawn(CanvasFunction)
+
+-- ==========================================
+-- SISTEMA DE COMANDOS PARA NOVA CHAT
+-- ==========================================
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local HttpService = game:GetService("HttpService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+-- Función para obtener el personaje de un jugador
+local function getChar(targetName)
+    if targetName == LocalPlayer.Name then
+        return LocalPlayer.Character
+    else
+        local player = Players:FindFirstChild(targetName)
+        if player then
+            return player.Character
+        end
+    end
+    return nil
+}
+
+-- ==========================================
+-- COMANDOS DISPONIBLES
+-- ==========================================
+local Commands = {}
+
+-- Comando verify (ejemplo)
+function Commands.verify()
+    local textLabel = workspace.WorkspaceCom["002_CommercialSign2"].Clicker
+    local char = LocalPlayer.Character
+    
+    if textLabel and char then
+        local rootPart = char:FindFirstChild("HumanoidRootPart")
+        if rootPart then
+            rootPart.CFrame = CFrame.new(textLabel.Position + Vector3.new(0, 5, 0))
+        end
+    end
+    print("Comando verify ejecutado")
+end
+
+-- Sistema de jail
+local ActiveJails = {}
+local JailLoops = {}
+
+function Commands.jail(targetName)
+    local char = getChar(targetName)
+    if not char then return end
+    
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    local basePos = root.Position
+    ActiveJails[targetName] = {}
+
+    local positions = {
+        {Vector3.new(5,0,0), Vector3.new(1,10,10)},
+        {Vector3.new(-5,0,0), Vector3.new(1,10,10)},
+        {Vector3.new(0,0,5), Vector3.new(10,10,1)},
+        {Vector3.new(0,0,-5), Vector3.new(10,10,1)},
+        {Vector3.new(0,5,0), Vector3.new(10,1,10)},
+        {Vector3.new(0,-5,0), Vector3.new(10,1,10)}
+    }
+    
+    for _, data in pairs(positions) do
+        local p = Instance.new("Part")
+        p.Anchored = true
+        p.Size = data[2]
+        p.CFrame = CFrame.new(basePos + data[1])
+        p.Transparency = 0.5
+        p.Color = Color3.new(0,0,0)
+        p.Parent = workspace
+        table.insert(ActiveJails[targetName], p)
+    end
+    
+    if char == LocalPlayer.Character then
+        JailLoops[targetName] = RunService.Heartbeat:Connect(function()
+            if char and root and (root.Position - basePos).Magnitude > 5 then
+                root.CFrame = CFrame.new(basePos)
+            end
+        end)
+    end
+    print("Jugador " .. targetName .. " encarcelado")
+end
+
+function Commands.unjail(targetName)
+    if ActiveJails[targetName] then
+        for _, part in ipairs(ActiveJails[targetName]) do
+            part:Destroy()
+        end
+        ActiveJails[targetName] = nil
+    end
+    
+    if JailLoops[targetName] then
+        JailLoops[targetName]:Disconnect()
+        JailLoops[targetName] = nil
+    end
+    print("Jugador " .. targetName .. " liberado")
+end
+
+function Commands.kick(targetName)
+    if targetName == LocalPlayer.Name then
+        LocalPlayer:Kick("Kicked by admin panel")
+    else
+        print("No puedes expulsar a otros jugadores (limitación cliente)")
+    end
+end
+
+function Commands.kill(targetName)
+    local char = getChar(targetName)
+    if not char then return end
+    if char == LocalPlayer.Character then 
+        char:BreakJoints()
+        print("Te has matado")
+    end
+end
+
+function Commands.killplus(targetName)
+    local char = getChar(targetName)
+    if not char then return end
+
+    if char == LocalPlayer.Character then
+        char:BreakJoints()
+    else
+        local hum = char:FindFirstChild("Humanoid")
+        if hum then hum.PlatformStand = true end
+    end
+
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    for _ = 1, 5 do
+        local p = Instance.new("Part")
+        p.Size = Vector3.new(6,6,6)
+        p.Anchored = false
+        p.CanCollide = false
+        p.Material = Enum.Material.Neon
+        p.Color = Color3.fromRGB(math.random(0,255), math.random(0,255), math.random(0,255))
+        p.CFrame = root.CFrame
+        p.Parent = workspace
+
+        local bv = Instance.new("BodyVelocity", p)
+        bv.MaxForce = Vector3.new(1e5,1e5,1e5)
+        bv.Velocity = Vector3.new(math.random(-50,50), math.random(20,80), math.random(-50,50))
+
+        game:GetService("Debris"):AddItem(p, 3)
+    end
+    print("Killplus ejecutado en " .. targetName)
+end
+
+function Commands.backrooms(targetName)
+    if not workspace:FindFirstChild("BackroomsMap") then
+        local id = 10581711055
+        local map = game:GetObjects("rbxassetid://" .. id)[1]
+        map.Name = "BackroomsMap"
+        map.Parent = workspace
+        
+        local basePos = Vector3.new(0, 10000, 0)
+        if not map.PrimaryPart then
+            local part = map:FindFirstChildWhichIsA("BasePart")
+            if part then map.PrimaryPart = part end
+        end
+        if map.PrimaryPart then
+            map:SetPrimaryPartCFrame(CFrame.new(basePos))
+        end
+    end
+
+    local char = getChar(targetName)
+    local tpPos = Vector3.new(59.06, 9996.70, 19.42)
+    
+    if char == LocalPlayer.Character and char:FindFirstChild("HumanoidRootPart") then
+        char:MoveTo(tpPos)
+    end
+    print("Teletransportado a Backrooms")
+end
+
+function Commands.unbackrooms(targetName)
+    local map = workspace:FindFirstChild("BackroomsMap")
+    if map then
+        map:Destroy()
+        print("Backrooms eliminado")
+    end
+end
+
+function Commands.freeze(targetName)
+    local char = getChar(targetName)
+    if not char then return end
+    
+    for _, part in ipairs(char:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.Anchored = true
+        end
+    end
+    
+    print("Jugador " .. targetName .. " congelado")
+end
+
+function Commands.unfreeze(targetName)
+    local char = getChar(targetName)
+    if not char then return end
+    
+    for _, part in ipairs(char:GetChildren()) do
+        if part:IsA("BasePart") then
+            part.Anchored = false
+        end
+    end
+    
+    print("Jugador " .. targetName .. " descongelado")
+}
+
+-- Sistema de jumpscares
+local function CreateJumpscare(imageId, soundId)
+    local gui = Instance.new("ScreenGui", game.CoreGui)
+    gui.Name = "jumpscare"
+    gui.ResetOnSpawn = false
+
+    local img = Instance.new("ImageLabel", gui)
+    img.Size = UDim2.new(1, 0, 1, 0)
+    img.Position = UDim2.new(0, 0, 0, 0)
+    img.BackgroundTransparency = 1
+    img.Image = imageId
+    img.ImageTransparency = 0
+
+    local sound = Instance.new("Sound", img)
+    sound.SoundId = soundId
+    sound.Volume = 5
+    sound:Play()
+
+    for i = 1, 20 do
+        img.Position = UDim2.new(0, math.random(-15,15), 0, math.random(-15,15))
+        task.wait(0.1)
+    end
+
+    for i = 1, 20 do
+        img.ImageTransparency = (i % 2 == 0) and 0.3 or 0
+        task.wait(0.1)
+    end
+    gui:Destroy()
+end
+
+function Commands.jumpscare1(targetName)
+    if targetName == LocalPlayer.Name then
+        CreateJumpscare("rbxassetid://126754882337711", "rbxassetid://138873214826309")
+    end
+end
+
+function Commands.jumpscare2(targetName)
+    if targetName == LocalPlayer.Name then
+        CreateJumpscare("rbxassetid://86379969987314", "rbxassetid://143942090")
+    end
+end
+
+function Commands.jumpscare3(targetName)
+    if targetName == LocalPlayer.Name then
+        CreateJumpscare("rbxassetid://127382022168206", "rbxassetid://143942090")
+    end
+end
+
+function Commands.jumpscare4(targetName)
+    if targetName == LocalPlayer.Name then
+        CreateJumpscare("rbxassetid://95973611964555", "rbxassetid://138873214826309")
+    end
+end
+
+function Commands.fling(targetName)
+    local char = getChar(targetName)
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    TweenService:Create(root, TweenInfo.new(1), {CFrame = CFrame.new(0, 100000, 0)}):Play()
+    print("Fling a " .. targetName)
+end
+
+function Commands.float(targetName)
+    local char = getChar(targetName)
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if not hum or not root then return end
+
+    local startY = root.Position.Y
+    local maxY = startY + 50
+
+    hum.WalkSpeed = 0
+    hum.JumpHeight = 0
+
+    local bv = Instance.new("BodyVelocity", root)
+    bv.MaxForce = Vector3.new(0, math.huge, 0)
+    bv.Velocity = Vector3.new(0, 10, 0)
+
+    local conn
+    conn = RunService.Heartbeat:Connect(function()
+        if root.Position.Y >= maxY then
+            bv:Destroy()
+            char:BreakJoints()
+            conn:Disconnect()
+        end
+    end)
+    print("Float en " .. targetName)
+end
+
+function Commands.launch(targetName)
+    local char = getChar(targetName)
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    local look = root.CFrame.LookVector
+
+    local bv = Instance.new("BodyVelocity", root)
+    bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+    bv.Velocity = look * 150
+
+    task.delay(3.5, function()
+        if bv then bv:Destroy() end
+    end)
+    print("Lanzado " .. targetName)
+end
+
+-- Sistema ragdoll
+function Commands.ragdoll(targetName)
+    local char = getChar(targetName)
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+
+    for _, v in ipairs(char:GetDescendants()) do
+        if v:IsA("Motor6D") then
+            local part0 = v.Part0
+            local part1 = v.Part1
+
+            local a0 = Instance.new("Attachment")
+            a0.CFrame = v.C0
+            a0.Parent = part0
+
+            local a1 = Instance.new("Attachment")
+            a1.CFrame = v.C1
+            a1.Parent = part1
+
+            local socket = Instance.new("BallSocketConstraint")
+            socket.Attachment0 = a0
+            socket.Attachment1 = a1
+            socket.Parent = part0
+
+            v.Enabled = false
+        end
+    end
+
+    hum:ChangeState(Enum.HumanoidStateType.Physics)
+    print("Ragdoll en " .. targetName)
+end
+
+function Commands.unragdoll(targetName)
+    local char = getChar(targetName)
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+
+    for _, v in ipairs(char:GetDescendants()) do
+        if v:IsA("BallSocketConstraint") then
+            v:Destroy()
+        end
+        if v:IsA("Attachment") then
+            v:Destroy()
+        end
+    end
+
+    for _, motor in ipairs(char:GetDescendants()) do
+        if motor:IsA("Motor6D") then
+            motor.Enabled = true
+        end
+    end
+
+    hum.PlatformStand = false
+    hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+    print("Ragdoll removido de " .. targetName)
+end
+
+-- Loop kills
+local LoopKills = {}
+
+function Commands.angel(targetName)
+    local name = LocalPlayer.Name
+    if LoopKills[name] then
+        return
+    end
+    LoopKills[name] = true
+
+    task.spawn(function()
+        while LoopKills[name] do
+            local char = getChar(targetName)
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum and hum.Health > 0 then
+                char:BreakJoints()
+            end
+            task.wait(0.4)
+        end
+    end)
+    print("Angel activado")
+end
+
+function Commands.unangel(targetName)
+    local name = LocalPlayer.Name
+    LoopKills[name] = nil
+    print("Angel desactivado")
+end
+
+-- Loop sit
+local loopsitting = false
+
+function Commands.loopsit(targetName)
+    if loopsitting then return end
+
+    loopsitting = true
+
+    task.spawn(function()
+        while loopsitting do
+            local char = getChar(targetName)
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            
+            if hum then
+                if not hum.Sit then
+                    hum.Sit = true
+                end
+            end
+            task.wait(0.1)
+        end
+    end)
+    print("Loop sit activado")
+end
+
+function Commands.unloopsit(targetName)
+    if not loopsitting then return end
+
+    loopsitting = false
+
+    local char = getChar(targetName)
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.Sit = false
+    end
+    print("Loop sit desactivado")
+end
+
+-- ==========================================
+-- SISTEMA DE PROCESAMIENTO DE COMANDOS
+-- ==========================================
+
+-- Configuración de permisos (opcional - similar a Developer en tu chat)
+local Admins = {
+    "Deluxe_Studios",
+    "Roun95"
+    -- Agrega aquí los nombres de los administradores
+}
+
+-- Función para verificar si un usuario es administrador
+local function isAdmin(username)
+    for _, admin in ipairs(Admins) do
+        if username == admin then
+            return true
+        end
+    end
+    return false
+end
+
+-- Función para procesar un comando
+local function processCommand(commandText, sender)
+    -- Verificar permisos (solo admins pueden usar comandos)
+    if not isAdmin(sender) then
+        print("Usuario sin permisos: " .. sender .. " intentó usar: " .. commandText)
+        return false
+    end
+
+    -- Extraer comando y argumentos
+    local cmd, target = commandText:match("^%s*(%S+)%s*(.*)$")
+    if not cmd then return false end
+    
+    -- Eliminar cualquier prefijo si existe
+    cmd = cmd:gsub("^[:!]", "")
+    
+    print("Procesando comando: " .. cmd .. " | Objetivo: " .. target)
+
+    -- Ejecutar el comando
+    if Commands[cmd] then
+        -- Si el comando es 'verify' no necesita target
+        if cmd == "verify" then
+            Commands[cmd]()
+        else
+            Commands[cmd](target)
+        end
+        return true
+    else
+        print("Comando desconocido: " .. cmd)
+        return false
+    end
+end
+
+-- ==========================================
+-- INTEGRACIÓN CON NOVA CHAT
+-- ==========================================
+
+-- Esperar a que el chat esté listo
+local function setupChatCommands()
+    print("Configurando sistema de comandos para Nova Chat...")
+    
+    -- Guardar la función original de manejo de mensajes
+    local originalOnMessage = getgenv().novachat.OnMessage
+    
+    -- Reemplazar con nuestra versión que procesa comandos
+    getgenv().novachat.OnMessage:Connect(function(msg)
+        -- Procesar el mensaje normalmente primero
+        local success, Decoded = pcall(HttpService.JSONDecode, HttpService, msg)
+        if not success then
+            warn("Failed to decode message:", msg)
+            return
+        end
+        
+        -- Verificar si es un comando (los comandos empiezan con ':' o '!')
+        if Decoded.message and (string.sub(Decoded.message, 1, 1) == ":" or string.sub(Decoded.message, 1, 1) == "!") then
+            -- Procesar el comando
+            processCommand(Decoded.message, Decoded.username)
+        end
+        
+        -- Continuar con el procesamiento normal del mensaje
+        -- Aquí va el código original de creación del mensaje en el chat
+        -- (El código que ya tienes en tu Nova Chat para mostrar mensajes)
+    end)
+    
+    print("Sistema de comandos listo!")
+end
+
+-- Iniciar la integración cuando el chat esté disponible
+task.spawn(function()
+    -- Esperar a que el chat esté inicializado
+    while not getgenv().novachat do
+        task.wait(1)
+    end
+    
+    -- Esperar un poco más para asegurar que todo esté listo
+    task.wait(2)
+    setupChatCommands()
+end)
 
 return G2L.ScreenGui
