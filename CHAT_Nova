@@ -442,7 +442,7 @@ function Commands.verify()
 end
 
 -- COMANDO: stopaudio
-function CommandsSystem.stopaudio(targetName)
+function Commands.stopaudio()
     local SoundService = game:GetService("SoundService")
     for _, sound in ipairs(SoundService:GetChildren()) do
         if sound:IsA("Sound") then
