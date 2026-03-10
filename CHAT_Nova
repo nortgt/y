@@ -1,8 +1,8 @@
 local G2L = {};
 
-if getgenv().trezchat then
+if getgenv().novachat then
 	warn("Nova Chat is already loaded.")
-	getgenv().trezchat:close()
+	getgenv().novachat:close()
 	return
 end
 
@@ -16,13 +16,13 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local UserInputService = game:GetService("UserInputService")
 local Player = Players.LocalPlayer
 
--- StarterGui.TrezChat
+-- StarterGui.novachat
 G2L.ScreenGui = Instance.new("ScreenGui")
 G2L.ScreenGui.Name = "NovaChat"
 G2L.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 G2L.ScreenGui.Parent = game:GetService("CoreGui")
 
--- StarterGui.TrezChat.Main
+-- StarterGui.novachat.Main
 G2L.Main = Instance.new("Frame")
 G2L.Main.Name = "Main"
 G2L.Main.ZIndex = 2
@@ -34,7 +34,7 @@ G2L.Main.Position = UDim2.new(0.5, 0, 0.5, 0)
 G2L.Main.BackgroundTransparency = 0.05
 G2L.Main.Parent = G2L.ScreenGui
 
--- StarterGui.TrezChat.Main.Line
+-- StarterGui.novachat.Main.Line
 G2L.Line = Instance.new("Frame")
 G2L.Line.Name = "Line"
 G2L.Line.ZIndex = 2
@@ -45,55 +45,12 @@ G2L.Line.Size = UDim2.new(0.9, 0, 0.005, 0)
 G2L.Line.Position = UDim2.new(0.5, 0, 0.15, 0)
 G2L.Line.Parent = G2L.Main
 
--- StarterGui.TrezChat.Main.Shadow
-G2L.Shadow = Instance.new("Frame")
-G2L.Shadow.Name = "Shadow"
-G2L.Shadow.ZIndex = 2
-G2L.Shadow.BorderSizePixel = 0
-G2L.Shadow.BackgroundColor3 = Color3.fromRGB(255, 141, 0)
-G2L.Shadow.AnchorPoint = Vector2.new(0.5, 0.5)
-G2L.Shadow.Size = UDim2.new(1, 0, 1, 0)
-G2L.Shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
-G2L.Shadow.BackgroundTransparency = 0.55
-G2L.Shadow.Parent = G2L.Main
-
--- StarterGui.TrezChat.Main.Shadow.UIGradient
-G2L.ShadowGradient = Instance.new("UIGradient")
-G2L.ShadowGradient.Rotation = -90
-G2L.ShadowGradient.Transparency = NumberSequence.new{
-    NumberSequenceKeypoint.new(0, 0.2),
-    NumberSequenceKeypoint.new(0.1, 0.7),
-    NumberSequenceKeypoint.new(0.3, 0.9),
-    NumberSequenceKeypoint.new(1, 1)
-}
-G2L.ShadowGradient.Parent = G2L.Shadow
-
-G2L.ShadowCorner = Instance.new("UICorner")
-G2L.ShadowCorner.Parent = G2L.Shadow
-
--- StarterGui.TrezChat.Main.UIStroke
+-- StarterGui.novachat.Main.UIStroke
 G2L.MainStroke = Instance.new("UIStroke")
 G2L.MainStroke.Color = Color3.fromRGB(255, 145, 10)
 G2L.MainStroke.Parent = G2L.Main
 
--- StarterGui.TrezChat.Main.Bg
-G2L.Background = Instance.new("ImageLabel")
-G2L.Background.Name = "Bg"
-G2L.Background.BorderSizePixel = 0
-G2L.Background.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-G2L.Background.ImageTransparency = 0.86
-G2L.Background.ImageColor3 = Color3.fromRGB(255, 141, 0)
-G2L.Background.AnchorPoint = Vector2.new(0.5, 0.5)
-G2L.Background.Image = "rbxassetid://15175796726"
-G2L.Background.Size = UDim2.new(1, 0, 1, 0)
-G2L.Background.BackgroundTransparency = 1
-G2L.Background.Position = UDim2.new(0.5, 0, 0.5, 0)
-G2L.Background.Parent = G2L.Main
-
-G2L.BackgroundCorner = Instance.new("UICorner")
-G2L.BackgroundCorner.Parent = G2L.Background
-
--- StarterGui.TrezChat.Main.SourceChat
+-- StarterGui.novachat.Main.SourceChat
 G2L.SourceChat = Instance.new("TextBox")
 G2L.SourceChat.Name = "SourceChat"
 G2L.SourceChat.TextXAlignment = Enum.TextXAlignment.Left
@@ -123,7 +80,7 @@ G2L.SourceChatPadding.Parent = G2L.SourceChat
 G2L.MainCorner = Instance.new("UICorner")
 G2L.MainCorner.Parent = G2L.Main
 
--- StarterGui.TrezChat.Main.SendAsync
+-- StarterGui.novachat.Main.SendAsync
 G2L.SendButton = Instance.new("ImageButton")
 G2L.SendButton.Name = "SendAsync"
 G2L.SendButton.BorderSizePixel = 0
@@ -140,7 +97,7 @@ G2L.SendButton.Parent = G2L.Main
 G2L.SendButtonAspect = Instance.new("UIAspectRatioConstraint")
 G2L.SendButtonAspect.Parent = G2L.SendButton
 
--- StarterGui.TrezChat.Main.TextLabel
+-- StarterGui.novachat.Main.TextLabel
 G2L.TitleLabel = Instance.new("TextLabel")
 G2L.TitleLabel.TextWrapped = true
 G2L.TitleLabel.BorderSizePixel = 0
@@ -157,7 +114,7 @@ G2L.TitleLabel.Text = "<font color='rgb(242, 111, 2)'><font face='Arial'>Nova</f
 G2L.TitleLabel.Position = UDim2.new(0.46, 0, 0.08, 0)
 G2L.TitleLabel.Parent = G2L.Main
 
--- StarterGui.TrezChat.Main.ChatHistory
+-- StarterGui.novachat.Main.ChatHistory
 G2L.ChatHistory = Instance.new("ScrollingFrame")
 G2L.ChatHistory.Name = "ChatHistory"
 G2L.ChatHistory.Active = true
@@ -246,7 +203,7 @@ local function MainFunction()
             gameid = game.PlaceId
         }
 
-        getgenv().trezchat:Send(HttpService:JSONEncode(DataContent))
+        getgenv().novachat:Send(HttpService:JSONEncode(DataContent))
     end
 
     function AdminArg.unban(player)
@@ -274,7 +231,7 @@ local function MainFunction()
         end
     end
 
-    getgenv().trezchat = WebSocket.connect("wss://free.blr2.piesocket.com/v3/1?api_key=eLudeCBiiTiQSr6DWJPMPfpZK9B6ghEu90ZbJwzm&notify_self=1")
+    getgenv().novachat = WebSocket.connect("wss://free.blr2.piesocket.com/v3/1?api_key=eLudeCBiiTiQSr6DWJPMPfpZK9B6ghEu90ZbJwzm&notify_self=1")
 
     local function sendMessage()
         if SourceChat.Text == "" then return end
@@ -292,7 +249,7 @@ local function MainFunction()
             }
             
             local success, result = pcall(function()
-                getgenv().trezchat:Send(HttpService:JSONEncode(DataContent))
+                getgenv().novachat:Send(HttpService:JSONEncode(DataContent))
             end)
             
             if not success then
@@ -309,7 +266,7 @@ local function MainFunction()
         if enterPressed then sendMessage() end
     end)
 
-    getgenv().trezchat.OnMessage:Connect(function(msg)
+    getgenv().novachat.OnMessage:Connect(function(msg)
         local success, Decoded = pcall(HttpService.JSONDecode, HttpService, msg)
         if not success then
             warn("Failed to decode message:", msg)
@@ -383,7 +340,7 @@ local function MainFunction()
         gamePlaying = "DataBase",
         gameid = game.PlaceId
     }
-    getgenv().trezchat:Send(HttpService:JSONEncode(welcomeMsg))
+    getgenv().novachat:Send(HttpService:JSONEncode(welcomeMsg))
 
     local messages = {
         "Be Careful Do Not Share Your Personal Info !!",
@@ -405,7 +362,7 @@ local function MainFunction()
                 gameid = game.PlaceId
             }
             
-            getgenv().trezchat:Send(HttpService:JSONEncode(DataContent))
+            getgenv().novachat:Send(HttpService:JSONEncode(DataContent))
             
             msgIndex = msgIndex + 1
             if msgIndex > #messages then
