@@ -16,193 +16,204 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local UserInputService = game:GetService("UserInputService")
 local Player = Players.LocalPlayer
 
+-- Funciones de utilidad para crear UI
+local function Create(className, properties)
+	local instance = Instance.new(className)
+	for prop, value in pairs(properties) do
+		instance[prop] = value
+	end
+	return instance
+end
+
 -- StarterGui.TrezChat
-G2L.ScreenGui = Instance.new("ScreenGui")
-G2L.ScreenGui.Name = "NovaChat"
-G2L.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-G2L.ScreenGui.Parent = game:GetService("CoreGui")
+G2L.ScreenGui = Create("ScreenGui", {
+	Name = "NovaChat",
+	ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+	Parent = game:GetService("CoreGui")
+})
 
 -- StarterGui.TrezChat.Main
-G2L.Main = Instance.new("Frame")
-G2L.Main.Name = "Main"
-G2L.Main.ZIndex = 2
-G2L.Main.BorderSizePixel = 0
-G2L.Main.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-G2L.Main.AnchorPoint = Vector2.new(0.5, 0.5)
-G2L.Main.Size = UDim2.new(0.38, 0, 0.54, 0)
-G2L.Main.Position = UDim2.new(0.5, 0, 0.5, 0)
-G2L.Main.BorderColor3 = Color3.fromRGB(0, 0, 0)
-G2L.Main.BackgroundTransparency = 0.05
-G2L.Main.Parent = G2L.ScreenGui
+G2L.Main = Create("Frame", {
+	Name = "Main",
+	ZIndex = 2,
+	BorderSizePixel = 0,
+	BackgroundColor3 = Color3.fromRGB(40, 40, 40),
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.new(0.38, 0, 0.54, 0),
+	Position = UDim2.new(0.5, 0, 0.5, 0),
+	BackgroundTransparency = 0.05,
+	Parent = G2L.ScreenGui
+})
 
 -- StarterGui.TrezChat.Main.Line
-G2L.Line = Instance.new("Frame")
-G2L.Line.Name = "Line"
-G2L.Line.ZIndex = 2
-G2L.Line.BorderSizePixel = 0
-G2L.Line.BackgroundColor3 = Color3.fromRGB(255, 141, 0)
-G2L.Line.AnchorPoint = Vector2.new(0.5, 0.5)
-G2L.Line.Size = UDim2.new(0.9, 0, 0.005, 0)
-G2L.Line.Position = UDim2.new(0.5, 0, 0.15, 0)
-G2L.Line.BorderColor3 = Color3.fromRGB(0, 0, 0)
-G2L.Line.Parent = G2L.Main
+G2L.Line = Create("Frame", {
+	Name = "Line",
+	ZIndex = 2,
+	BorderSizePixel = 0,
+	BackgroundColor3 = Color3.fromRGB(255, 141, 0),
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.new(0.9, 0, 0.005, 0),
+	Position = UDim2.new(0.5, 0, 0.15, 0),
+	Parent = G2L.Main
+})
 
 -- StarterGui.TrezChat.Main.Shadow
-G2L.Shadow = Instance.new("Frame")
-G2L.Shadow.Name = "Shadow"
-G2L.Shadow.ZIndex = 2
-G2L.Shadow.BorderSizePixel = 0
-G2L.Shadow.BackgroundColor3 = Color3.fromRGB(255, 141, 0)
-G2L.Shadow.AnchorPoint = Vector2.new(0.5, 0.5)
-G2L.Shadow.Size = UDim2.new(1, 0, 1, 0)
-G2L.Shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
-G2L.Shadow.BorderColor3 = Color3.fromRGB(0, 0, 0)
-G2L.Shadow.BackgroundTransparency = 0.55
-G2L.Shadow.Parent = G2L.Main
+G2L.Shadow = Create("Frame", {
+	Name = "Shadow",
+	ZIndex = 2,
+	BorderSizePixel = 0,
+	BackgroundColor3 = Color3.fromRGB(255, 141, 0),
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.new(1, 0, 1, 0),
+	Position = UDim2.new(0.5, 0, 0.5, 0),
+	BackgroundTransparency = 0.55,
+	Parent = G2L.Main
+})
 
--- StarterGui.TrezChat.Main.Shadow.UIGradient
-G2L.ShadowGradient = Instance.new("UIGradient")
-G2L.ShadowGradient.Rotation = -90
-G2L.ShadowGradient.Transparency = NumberSequence.new{
-    NumberSequenceKeypoint.new(0, 0.2),
-    NumberSequenceKeypoint.new(0.1, 0.7),
-    NumberSequenceKeypoint.new(0.3, 0.9),
-    NumberSequenceKeypoint.new(1, 1)
-}
-G2L.ShadowGradient.Parent = G2L.Shadow
+G2L.ShadowGradient = Create("UIGradient", {
+	Rotation = -90,
+	Transparency = NumberSequence.new{
+		NumberSequenceKeypoint.new(0, 0.2),
+		NumberSequenceKeypoint.new(0.1, 0.7),
+		NumberSequenceKeypoint.new(0.3, 0.9),
+		NumberSequenceKeypoint.new(1, 1)
+	},
+	Parent = G2L.Shadow
+})
 
-G2L.ShadowCorner = Instance.new("UICorner")
-G2L.ShadowCorner.Parent = G2L.Shadow
+G2L.ShadowCorner = Create("UICorner", { Parent = G2L.Shadow })
 
--- StarterGui.TrezChat.Main.UIStroke
-G2L.MainStroke = Instance.new("UIStroke")
-G2L.MainStroke.Color = Color3.fromRGB(255, 145, 10)
-G2L.MainStroke.Parent = G2L.Main
+G2L.MainStroke = Create("UIStroke", {
+	Color = Color3.fromRGB(255, 145, 10),
+	Parent = G2L.Main
+})
 
 -- StarterGui.TrezChat.Main.Bg
-G2L.Background = Instance.new("ImageLabel")
-G2L.Background.Name = "Bg"
-G2L.Background.BorderSizePixel = 0
-G2L.Background.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-G2L.Background.ImageTransparency = 0.86
-G2L.Background.ImageColor3 = Color3.fromRGB(255, 141, 0)
-G2L.Background.AnchorPoint = Vector2.new(0.5, 0.5)
-G2L.Background.Image = "rbxassetid://15175796726"
-G2L.Background.Size = UDim2.new(1, 0, 1, 0)
-G2L.Background.BorderColor3 = Color3.fromRGB(0, 0, 0)
-G2L.Background.BackgroundTransparency = 1
-G2L.Background.Position = UDim2.new(0.5, 0, 0.5, 0)
-G2L.Background.Parent = G2L.Main
+G2L.Background = Create("ImageLabel", {
+	Name = "Bg",
+	BorderSizePixel = 0,
+	BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+	ImageTransparency = 0.86,
+	ImageColor3 = Color3.fromRGB(255, 141, 0),
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Image = "rbxassetid://15175796726",
+	Size = UDim2.new(1, 0, 1, 0),
+	BackgroundTransparency = 1,
+	Position = UDim2.new(0.5, 0, 0.5, 0),
+	Parent = G2L.Main
+})
 
-G2L.BackgroundCorner = Instance.new("UICorner")
-G2L.BackgroundCorner.Parent = G2L.Background
+G2L.BackgroundCorner = Create("UICorner", { Parent = G2L.Background })
 
 -- StarterGui.TrezChat.Main.SourceChat
-G2L.SourceChat = Instance.new("TextBox")
-G2L.SourceChat.Name = "SourceChat"
-G2L.SourceChat.TextXAlignment = Enum.TextXAlignment.Left
-G2L.SourceChat.ZIndex = 3
-G2L.SourceChat.BorderSizePixel = 0
-G2L.SourceChat.TextWrapped = true
-G2L.SourceChat.TextSize = 14
-G2L.SourceChat.TextColor3 = Color3.fromRGB(255, 255, 255)
-G2L.SourceChat.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-G2L.SourceChat.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-G2L.SourceChat.Size = UDim2.new(0, 240, 0.1, 0)
-G2L.SourceChat.Position = UDim2.new(0.03, 0, 0.85, 0)
-G2L.SourceChat.BorderColor3 = Color3.fromRGB(0, 0, 0)
-G2L.SourceChat.Text = ""
-G2L.SourceChat.PlaceholderText = "Send your message here..."
-G2L.SourceChat.BackgroundTransparency = 0.5
-G2L.SourceChat.Parent = G2L.Main
+G2L.SourceChat = Create("TextBox", {
+	Name = "SourceChat",
+	TextXAlignment = Enum.TextXAlignment.Left,
+	ZIndex = 3,
+	BorderSizePixel = 0,
+	TextWrapped = true,
+	TextSize = 14,
+	TextColor3 = Color3.fromRGB(255, 255, 255),
+	BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+	FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+	Size = UDim2.new(0, 240, 0.1, 0),
+	Position = UDim2.new(0.03, 0, 0.85, 0),
+	Text = "",
+	PlaceholderText = "Send your message here...",
+	BackgroundTransparency = 0.5,
+	Parent = G2L.Main
+})
 
-G2L.SourceChatCorner = Instance.new("UICorner")
-G2L.SourceChatCorner.CornerRadius = UDim.new(0, 4)
-G2L.SourceChatCorner.Parent = G2L.SourceChat
+G2L.SourceChatCorner = Create("UICorner", {
+	CornerRadius = UDim.new(0, 4),
+	Parent = G2L.SourceChat
+})
 
-G2L.SourceChatPadding = Instance.new("UIPadding")
-G2L.SourceChatPadding.PaddingLeft = UDim.new(0, 5)
-G2L.SourceChatPadding.Parent = G2L.SourceChat
+G2L.SourceChatPadding = Create("UIPadding", {
+	PaddingLeft = UDim.new(0, 5),
+	Parent = G2L.SourceChat
+})
 
-G2L.MainCorner = Instance.new("UICorner")
-G2L.MainCorner.Parent = G2L.Main
+G2L.MainCorner = Create("UICorner", { Parent = G2L.Main })
 
 -- StarterGui.TrezChat.Main.SendAsync
-G2L.SendButton = Instance.new("ImageButton")
-G2L.SendButton.Name = "SendAsync"
-G2L.SendButton.BorderSizePixel = 0
-G2L.SendButton.BackgroundTransparency = 1
-G2L.SendButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-G2L.SendButton.ImageColor3 = Color3.fromRGB(255, 141, 0)
-G2L.SendButton.ZIndex = 3
-G2L.SendButton.AnchorPoint = Vector2.new(0.5, 0.5)
-G2L.SendButton.Image = "rbxassetid://18940312887"
-G2L.SendButton.Size = UDim2.new(0.1, 0, 0.1, 0)
-G2L.SendButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
-G2L.SendButton.Position = UDim2.new(0.9, 0, 0.9, 0)
-G2L.SendButton.Parent = G2L.Main
+G2L.SendButton = Create("ImageButton", {
+	Name = "SendAsync",
+	BorderSizePixel = 0,
+	BackgroundTransparency = 1,
+	BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+	ImageColor3 = Color3.fromRGB(255, 141, 0),
+	ZIndex = 3,
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Image = "rbxassetid://18940312887",
+	Size = UDim2.new(0.1, 0, 0.1, 0),
+	Position = UDim2.new(0.9, 0, 0.9, 0),
+	Parent = G2L.Main
+})
 
-G2L.SendButtonAspect = Instance.new("UIAspectRatioConstraint")
-G2L.SendButtonAspect.Parent = G2L.SendButton
+G2L.SendButtonAspect = Create("UIAspectRatioConstraint", { Parent = G2L.SendButton })
 
 -- StarterGui.TrezChat.Main.TextLabel
-G2L.TitleLabel = Instance.new("TextLabel")
-G2L.TitleLabel.TextWrapped = true
-G2L.TitleLabel.BorderSizePixel = 0
-G2L.TitleLabel.TextSize = 18
-G2L.TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-G2L.TitleLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-G2L.TitleLabel.FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
-G2L.TitleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
-G2L.TitleLabel.BackgroundTransparency = 1
-G2L.TitleLabel.RichText = true
-G2L.TitleLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-G2L.TitleLabel.Size = UDim2.new(0.84, 0, 0.1, 0)
-G2L.TitleLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
-G2L.TitleLabel.Text = "<font color='rgb(242, 111, 2)'><font face='Arial'>Nova</font></font> <font color='rgb(255, 255, 255)'>Chat BETA</font>"
-G2L.TitleLabel.Position = UDim2.new(0.46, 0, 0.08, 0)
-G2L.TitleLabel.Parent = G2L.Main
+G2L.TitleLabel = Create("TextLabel", {
+	TextWrapped = true,
+	BorderSizePixel = 0,
+	TextSize = 18,
+	TextXAlignment = Enum.TextXAlignment.Left,
+	BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+	FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json", Enum.FontWeight.Regular, Enum.FontStyle.Normal),
+	TextColor3 = Color3.fromRGB(0, 0, 0),
+	BackgroundTransparency = 1,
+	RichText = true,
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Size = UDim2.new(0.84, 0, 0.1, 0),
+	Text = "<font color='rgb(242, 111, 2)'><font face='Arial'>Nova</font></font> <font color='rgb(255, 255, 255)'>Chat BETA</font>",
+	Position = UDim2.new(0.46, 0, 0.08, 0),
+	Parent = G2L.Main
+})
 
 -- StarterGui.TrezChat.Main.ChatHistory
-G2L.ChatHistory = Instance.new("ScrollingFrame")
-G2L.ChatHistory.Name = "ChatHistory"
-G2L.ChatHistory.Active = true
-G2L.ChatHistory.ZIndex = 3
-G2L.ChatHistory.BorderSizePixel = 0
-G2L.ChatHistory.TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
-G2L.ChatHistory.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-G2L.ChatHistory.BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
-G2L.ChatHistory.Size = UDim2.new(0.94, 0, 0.62, 0)
-G2L.ChatHistory.ScrollBarImageColor3 = Color3.fromRGB(255, 141, 0)
-G2L.ChatHistory.Position = UDim2.new(0.03, 0, 0.18, 0)
-G2L.ChatHistory.BorderColor3 = Color3.fromRGB(0, 0, 0)
-G2L.ChatHistory.ScrollBarThickness = 3
-G2L.ChatHistory.BackgroundTransparency = 0.65
-G2L.ChatHistory.Parent = G2L.Main
+G2L.ChatHistory = Create("ScrollingFrame", {
+	Name = "ChatHistory",
+	Active = true,
+	ZIndex = 3,
+	BorderSizePixel = 0,
+	TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
+	BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+	BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
+	Size = UDim2.new(0.94, 0, 0.62, 0),
+	ScrollBarImageColor3 = Color3.fromRGB(255, 141, 0),
+	Position = UDim2.new(0.03, 0, 0.18, 0),
+	ScrollBarThickness = 3,
+	BackgroundTransparency = 0.65,
+	Parent = G2L.Main
+})
 
-G2L.ChatLayout = Instance.new("UIListLayout")
-G2L.ChatLayout.Padding = UDim.new(0, 3)
-G2L.ChatLayout.SortOrder = Enum.SortOrder.LayoutOrder
-G2L.ChatLayout.Parent = G2L.ChatHistory
+G2L.ChatLayout = Create("UIListLayout", {
+	Padding = UDim.new(0, 3),
+	SortOrder = Enum.SortOrder.LayoutOrder,
+	Parent = G2L.ChatHistory
+})
 
-G2L.ChatPadding = Instance.new("UIPadding")
-G2L.ChatPadding.PaddingTop = UDim.new(0, 5)
-G2L.ChatPadding.PaddingLeft = UDim.new(0, 5)
-G2L.ChatPadding.Parent = G2L.ChatHistory
+G2L.ChatPadding = Create("UIPadding", {
+	PaddingTop = UDim.new(0, 5),
+	PaddingLeft = UDim.new(0, 5),
+	Parent = G2L.ChatHistory
+})
 
 --// Lógica Principal
 local function MainFunction()
-    local NoticeSound = Instance.new("Sound")
-    NoticeSound.SoundId = "rbxassetid://2865226708"
-    NoticeSound.Name = "NoticeReciveSound"
-    NoticeSound.Parent = G2L.ScreenGui
+    local NoticeSound = Create("Sound", {
+		SoundId = "rbxassetid://2865226708",
+		Name = "NoticeReciveSound",
+		Parent = G2L.ScreenGui
+	})
     
-    local SendSound = Instance.new("Sound")
-    SendSound.SoundId = "rbxassetid://5485567028"
-    SendSound.Name = "SendSound"
-    SendSound.Parent = G2L.ScreenGui
+    local SendSound = Create("Sound", {
+		SoundId = "rbxassetid://5485567028",
+		Name = "SendSound",
+		Parent = G2L.ScreenGui
+	})
     
-    local Main = G2L.Main
     local ChatHistory = G2L.ChatHistory
     local SendAsync = G2L.SendButton
     local SourceChat = G2L.SourceChat
@@ -270,18 +281,20 @@ local function MainFunction()
         end
     end
 
+	-- Conexión WebSocket
     getgenv().trezchat = WebSocket.connect("wss://free.blr2.piesocket.com/v3/1?api_key=eLudeCBiiTiQSr6DWJPMPfpZK9B6ghEu90ZbJwzm&notify_self=1")
 
     local function sendMessage()
-        if SourceChat.Text == "" then return end
+        local text = SourceChat.Text
+		if text:gsub(" ", "") == "" then return end
         
-        HandleCommand(SourceChat.Text)
+        HandleCommand(text)
 
         task.spawn(function()
             local DataContent = {
                 type = "message",
                 username = Player.Name,
-                message = SourceChat.Text,
+                message = text,
                 userid = Player.UserId,
                 gamePlaying = MarketplaceService:GetProductInfo(game.PlaceId).Name,
                 gameid = game.PlaceId
@@ -312,58 +325,56 @@ local function MainFunction()
             return
         end
 
-        -- Crear mensaje directamente (sin ChatExample)
-        local MessageFrame = Instance.new("Frame")
-        MessageFrame.Name = (Decoded.username or "Unknown") .. "_Message"
-        MessageFrame.BackgroundTransparency = 1
-        MessageFrame.Size = UDim2.new(1, -10, 0, 50)
-        MessageFrame.Parent = ChatHistory
+        -- Crear mensaje dinámico usando la función Create
+        local MessageFrame = Create("Frame", {
+			Name = (Decoded.username or "Unknown") .. "_Message",
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, -10, 0, 50),
+			Parent = ChatHistory
+		})
 
-        local PlayerIcon = Instance.new("ImageLabel")
-        PlayerIcon.Name = "PlayerIcon"
-        PlayerIcon.BackgroundTransparency = 1
-        PlayerIcon.Size = UDim2.new(0, 35, 0, 35)
-        PlayerIcon.Position = UDim2.new(0, 5, 0, 5)
-        PlayerIcon.Image = "rbxthumb://type=AvatarHeadShot&id=" .. (Decoded.userid or 0) .. "&w=420&h=420"
-        PlayerIcon.Parent = MessageFrame
+        local PlayerIcon = Create("ImageLabel", {
+			Name = "PlayerIcon",
+			BackgroundTransparency = 1,
+			Size = UDim2.new(0, 35, 0, 35),
+			Position = UDim2.new(0, 5, 0, 5),
+			Image = "rbxthumb://type=AvatarHeadShot&id=" .. (Decoded.userid or 0) .. "&w=420&h=420",
+			Parent = MessageFrame
+		})
 
-        local IconCorner = Instance.new("UICorner")
-        IconCorner.CornerRadius = UDim.new(1, 0)
-        IconCorner.Parent = PlayerIcon
+        Create("UICorner", { CornerRadius = UDim.new(1, 0), Parent = PlayerIcon })
 
-        local SenderLabel = Instance.new("TextLabel")
-        SenderLabel.Name = "Sender"
-        SenderLabel.BackgroundTransparency = 1
-        SenderLabel.Size = UDim2.new(1, -50, 0, 18)
-        SenderLabel.Position = UDim2.new(0, 45, 0, 5)
-        SenderLabel.Font = Enum.Font.SourceSansBold
-        SenderLabel.TextSize = 15
-        SenderLabel.TextXAlignment = Enum.TextXAlignment.Left
+        local isDev = table.find(Developer, Decoded.username)
         
-        if table.find(Developer, Decoded.username) then
-            SenderLabel.Text = Decoded.username .. " ( Dev ) ( " .. (Decoded.gamePlaying or "N/A") .. " )"
-            SenderLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
-        else
-            SenderLabel.Text = Decoded.username .. " ( " .. (Decoded.gamePlaying or "N/A") .. " )"
-            SenderLabel.TextColor3 = Color3.fromRGB(255, 129, 0)
-        end
-        SenderLabel.Parent = MessageFrame
+		local SenderLabel = Create("TextLabel", {
+			Name = "Sender",
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, -50, 0, 18),
+			Position = UDim2.new(0, 45, 0, 5),
+			Font = Enum.Font.SourceSansBold,
+			TextSize = 15,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			Text = isDev and (Decoded.username .. " ( Dev ) ( " .. (Decoded.gamePlaying or "N/A") .. " )") or (Decoded.username .. " ( " .. (Decoded.gamePlaying or "N/A") .. " )"),
+			TextColor3 = isDev and Color3.fromRGB(255, 200, 0) or Color3.fromRGB(255, 129, 0),
+			Parent = MessageFrame
+		})
 
-        local MessageLabel = Instance.new("TextLabel")
-        MessageLabel.Name = "MessageSource"
-        MessageLabel.BackgroundTransparency = 1
-        MessageLabel.Size = UDim2.new(1, -50, 0, 25)
-        MessageLabel.Position = UDim2.new(0, 45, 0, 23)
-        MessageLabel.Font = Enum.Font.SourceSans
-        MessageLabel.TextSize = 14
-        MessageLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        MessageLabel.TextWrapped = true
-        MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
-        MessageLabel.TextYAlignment = Enum.TextYAlignment.Top
-        MessageLabel.Text = Decoded.message or ""
-        MessageLabel.Parent = MessageFrame
+        local MessageLabel = Create("TextLabel", {
+			Name = "MessageSource",
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, -50, 0, 25),
+			Position = UDim2.new(0, 45, 0, 23),
+			Font = Enum.Font.SourceSans,
+			TextSize = 14,
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			TextWrapped = true,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextYAlignment = Enum.TextYAlignment.Top,
+			Text = Decoded.message or "",
+			Parent = MessageFrame
+		})
 
-        -- Ajustar altura según contenido
+        -- Ajustar altura según contenido para que los mensajes largos no se corten
         local textHeight = MessageLabel.TextBounds.Y
         MessageLabel.Size = UDim2.new(1, -50, 0, math.max(25, textHeight + 5))
         MessageFrame.Size = UDim2.new(1, -10, 0, 40 + math.max(0, textHeight - 20))
@@ -390,7 +401,7 @@ local function MainFunction()
     task.spawn(function()
         local msgIndex = 1
         while true do
-            task.wait(1000) 
+            task.wait(1000) -- Retardo de 1000 segundos
             
             local DataContent = {
                 type = "message",
@@ -401,7 +412,10 @@ local function MainFunction()
                 gameid = game.PlaceId
             }
             
-            getgenv().trezchat:Send(HttpService:JSONEncode(DataContent))
+            -- pcall para evitar que el bucle se rompa si el socket se cierra
+			pcall(function()
+            	getgenv().trezchat:Send(HttpService:JSONEncode(DataContent))
+			end)
             
             msgIndex = msgIndex + 1
             if msgIndex > #messages then
@@ -412,7 +426,7 @@ local function MainFunction()
 end
 task.spawn(MainFunction)
 
---// Lógica de Arrastre
+--// Lógica de Arrastre (Sin Memory Leaks)
 local function UIDragFunction()
     local frame = G2L.Main
     local dragging, dragInput, dragStart, startPos
@@ -449,7 +463,7 @@ local function UIDragFunction()
 end
 task.spawn(UIDragFunction)
 
---// Lógica del Canvas del Chat
+--// Lógica del Canvas del Chat (Scroll Automático)
 local function CanvasFunction()
     local ChatHistory = G2L.ChatHistory
     local Layout = G2L.ChatLayout
@@ -458,6 +472,8 @@ local function CanvasFunction()
     
     local function Update()
         ChatHistory.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y + 10)
+		-- Opcional: Hacer scroll hacia abajo automáticamente cuando llega un mensaje nuevo
+		ChatHistory.CanvasPosition = Vector2.new(0, Layout.AbsoluteContentSize.Y)
     end
     
     Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(Update)
