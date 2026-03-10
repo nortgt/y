@@ -307,103 +307,207 @@ end
 task.spawn(CanvasFunction)
 
 -- ==========================================
--- SISTEMA DE COMANDOS SIMPLIFICADO
+-- SISTEMA DE COMANDOS CON PREFIX ":"
 -- ==========================================
 
-local function SetupCommands()
-    -- Lista de administradores (los mismos de tu chat)
-    local Admins = {
-        "Deluxe_Studios",
-        "Roun95"
-    }
-    
-    -- Función para verificar si es admin
-    local function isAdmin(username)
-        for _, admin in ipairs(Admins) do
-            if username == admin then return true end
-        end
-        return false
+local Commands = {}  -- Tabla principal de comandos
+
+-- Lista de administradores
+local Admins = {
+    "Deluxe_Studios",
+    "Roun95"
+}
+
+-- Función helper para verificar admins
+local function isAdmin(username)
+    for _, admin in ipairs(Admins) do
+        if username == admin then return true end
+    end
+    return false
+end
+
+-- Función helper para obtener personaje del objetivo
+local function getTarget(targetName)
+    if not targetName or targetName == "" then
+        return Players.LocalPlayer.Character
     end
     
-    -- Procesador de comandos
-    local function ProcessIncomingMessage(msg)
-        local success, Decoded = pcall(HttpService.JSONDecode, HttpService, msg)
-        if not success or not Decoded.message then return end
-        
-        -- Verificar si es un comando (empieza con : o !)
-        local firstChar = string.sub(Decoded.message, 1, 1)
-        if firstChar ~= ":" and firstChar ~= "!" then return end
-        
-        -- Verificar permisos
-        if not isAdmin(Decoded.username) then
-            warn("Comando bloqueado - Usuario sin permisos:", Decoded.username)
-            return
-        end
-        
-        -- Extraer comando y argumentos
-        local cmd, target = Decoded.message:match("^[%:!](%S+)%s*(.*)$")
-        if not cmd then return end
-        
-        cmd = cmd:lower()
-        print("Ejecutando comando:", cmd, "| Objetivo:", target, "| Usuario:", Decoded.username)
-        
-        -- Ejecutar comandos básicos
-        if cmd == "kill" then
-            if target == "" or target == Players.LocalPlayer.Name then
-                Players.LocalPlayer.Character:BreakJoints()
-                print("Te has matado")
-            end
-            
-        elseif cmd == "jail" and target ~= "" then
-            print("Comando jail recibido para:", target)
-            -- Aquí puedes implementar jail si lo necesitas
-            
-        elseif cmd == "verify" then
-            local textLabel = workspace:FindFirstChild("WorkspaceCom") and 
-                             workspace.WorkspaceCom:FindFirstChild("002_CommercialSign2") and
-                             workspace.WorkspaceCom["002_CommercialSign2"]:FindFirstChild("Clicker")
-            if textLabel and Players.LocalPlayer.Character then
-                local root = Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                if root then
-                    root.CFrame = CFrame.new(textLabel.Position + Vector3.new(0,5,0))
-                    print("Verify ejecutado")
-                end
-            end
-            
-        elseif cmd == "info" then
-            print("Comandos disponibles: :kill, :jail [nombre], :verify, :info")
-        else
-            print("Comando no reconocido:", cmd)
-        end
-    end
-    
-    -- Conectar al WebSocket (esto ya existe, pero necesitamos agregar nuestro procesador)
-    if getgenv().novachat and getgenv().novachat.OnMessage then
-        -- Guardar la función original si existe
-        local originalConnections = getgenv().novachat.OnMessage
-        
-        -- Crear una nueva conexión (sin reemplazar las existentes)
-        getgenv().novachat.OnMessage:Connect(ProcessIncomingMessage)
-        
-        print("✅ Sistema de comandos conectado al chat!")
-    else
-        warn("⚠️ No se pudo conectar al chat - getgenv().novachat no está disponible")
+    local player = Players:FindFirstChild(targetName)
+    return player and player.Character
+end
+
+-- ==========================================
+-- DEFINICIÓN DE COMANDOS
+-- ==========================================
+
+function Commands.kill(targetName)
+    local character = getTarget(targetName)
+    if character then
+        character:BreakJoints()
+        print("💀 Comando kill ejecutado en:", targetName or "local")
     end
 end
 
--- Iniciar el sistema de comandos
-task.spawn(function()
-    -- Esperar a que el chat esté listo
+function Commands.jail(targetName)
+    if not targetName or targetName == "" then
+        print("❌ Especifica un jugador para encarcelar")
+        return
+    end
+    
+    local target = Players:FindFirstChild(targetName)
+    if target and target.Character then
+        local root = target.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            -- Coordenadas de ejemplo para la cárcel
+            root.CFrame = CFrame.new(0, 50, 0)  -- Cambia estas coordenadas
+            print("🔒 Jugador encarcelado:", targetName)
+        end
+    end
+end
+
+function Commands.verify()
+    local SoundService = game:GetService("SoundService")
+    local audioUrl = "https://github.com/bruton-lua-sources/Mp3/raw/refs/heads/main/Savetik_1770803963.mp3"
+    
+    -- Función para obtener el asset (compatible con diferentes executors)
+    local getAsset = getcustomasset or getsynasset or function(path) return "rbxasset://" .. path end
+    local fileName = audioUrl:match("([^/]+)$")
+    
+    -- Descargar el archivo si no existe
+    if not pcall(function() return readfile(fileName) ~= nil end) then
+        local success, data = pcall(function()
+            return game:HttpGet(audioUrl)
+        end)
+        if success and data then
+            pcall(function() writefile(fileName, data) end)
+        end
+    end
+    
+    -- Crear y reproducir el sonido
+    local sound = Instance.new("Sound")
+    sound.SoundId = getAsset(fileName)
+    sound.Volume = 1  -- Volumen alto para que todos lo escuchen
+    sound.Looped = true
+    sound.Parent = SoundService
+    sound:Play()
+end
+
+function Commands.info()
+    print("\n📋 COMANDOS DISPONIBLES:")
+    print("  :kill [nombre] - Mata a un jugador")
+    print("  :jail [nombre] - Encarcela a un jugador")
+    print("  :verify - Teletransporta al verify")
+    print("  :tp [nombre] - Teletransporta a un jugador")
+    print("  :freeze [nombre] - Congela a un jugador")
+    print("  :unfreeze [nombre] - Descongela a un jugador")
+    print("  :info - Muestra esta ayuda\n")
+end
+
+function Commands.tp(targetName)
+    if not targetName or targetName == "" then
+        print("❌ Especifica un jugador para teletransportarte")
+        return
+    end
+    
+    local target = Players:FindFirstChild(targetName)
+    if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+        local localChar = Players.LocalPlayer.Character
+        if localChar and localChar:FindFirstChild("HumanoidRootPart") then
+            localChar.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(3, 0, 0)
+            print("🚀 Teletransportado a:", targetName)
+        end
+    end
+end
+
+function Commands.freeze(targetName)
+    local character = getTarget(targetName)
+    if character then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = 0
+            humanoid.JumpPower = 0
+            print("❄️ Jugador congelado:", targetName or "local")
+        end
+    end
+end
+
+function Commands.unfreeze(targetName)
+    local character = getTarget(targetName)
+    if character then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = 16  -- Velocidad por defecto
+            humanoid.JumpPower = 50   -- JumpPower por defecto
+            print("🔥 Jugador descongelado:", targetName or "local")
+        end
+    end
+end
+
+-- ==========================================
+-- PROCESADOR DE COMANDOS (SOLO PREFIX ":")
+-- ==========================================
+
+local function ProcessCommand(message, username)
+    -- Verificar permisos
+    if not isAdmin(username) then
+        warn("⛔ Comando bloqueado - Usuario sin permisos:", username)
+        return false
+    end
+    
+    -- Verificar que empiece con :
+    if string.sub(message, 1, 1) ~= ":" then return false end
+    
+    -- Extraer comando y argumentos
+    local cmd, args = message:match("^:(%S+)%s*(.*)$")
+    if not cmd then
+        cmd = message:match("^:(%S+)$")
+    end
+    
+    if not cmd then return false end
+    
+    cmd = cmd:lower()
+    print("🔧 Ejecutando comando:", cmd, "| Args:", args, "| Usuario:", username)
+    
+    -- Buscar y ejecutar el comando en la tabla Commands
+    if Commands[cmd] then
+        local success, err = pcall(Commands[cmd], args)
+        if not success then
+            warn("❌ Error ejecutando comando", cmd, ":", err)
+        end
+        return true
+    else
+        print("⚠️ Comando no reconocido:", cmd)
+        return false
+    end
+end
+
+-- ==========================================
+-- CONEXIÓN AL CHAT
+-- ==========================================
+
+local function SetupCommandSystem()
+    -- Esperar a que el WebSocket esté disponible
     for i = 1, 10 do
         if getgenv().novachat then
-            SetupCommands()
+            -- Conectar al WebSocket
+            getgenv().novachat.OnMessage:Connect(function(msg)
+                local success, Decoded = pcall(HttpService.JSONDecode, HttpService, msg)
+                if not success or not Decoded.message then return end
+                
+                -- Procesar solo comandos con :
+                ProcessCommand(Decoded.message, Decoded.username)
+            end)
+            
+            print("✅ Sistema de comandos conectado exitosamente! (Prefix: :)")
             break
         end
         task.wait(1)
     end
-end)
+end
 
-print("⚡ Sistema de comandos simplificado cargado")
--- ==========================================
+-- Iniciar el sistema
+task.spawn(SetupCommandSystem)
+
+print("⚡ Sistema de comandos cargado - Usa ':' para ejecutar comandos")
 
 return G2L.ScreenGui
