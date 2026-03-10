@@ -373,7 +373,7 @@ local ActiveJails = {}
 local JailLoops = {}
 
 -- COMANDO: jail
-function CommandsSystem.jail(targetName)
+function Commands.jail(targetName)
     if not targetName or targetName == "" then
         print("⚠️ Uso correcto: :jail NombreJugador")
         return
@@ -431,7 +431,7 @@ function CommandsSystem.jail(targetName)
 end
 
 -- COMANDO: unjail
-function CommandsSystem.unjail(targetName)
+function Commands.unjail(targetName)
     if not targetName or targetName == "" then
         print("⚠️ Uso correcto: :unjail NombreJugador")
         return
