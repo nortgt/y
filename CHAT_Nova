@@ -246,7 +246,7 @@ local function MainFunction()
             end
         end)
 
-        -- SendSound:Play()
+        SendSound:Play()
         SourceChat.Text = ""
     end
 
@@ -290,7 +290,7 @@ local function MainFunction()
         SenderLabel.TextXAlignment = Enum.TextXAlignment.Left
         
         if table.find(Developer, Decoded.username) then
-            SenderLabel.Text = Decoded.username .. " ( Dev ) ( " .. (Decoded.gamePlaying or "N/A") .. " )"
+            SenderLabel.Text = Decoded.username .. " ( Owner ) " -- ( " .. (Decoded.gamePlaying or "N/A") .. " )
             SenderLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
         else
             SenderLabel.Text = Decoded.username .. " ( " .. (Decoded.gamePlaying or "N/A") .. " )"
@@ -316,9 +316,9 @@ local function MainFunction()
         MessageLabel.Size = UDim2.new(1, -50, 0, math.max(25, textHeight + 5))
         MessageFrame.Size = UDim2.new(1, -10, 0, 40 + math.max(0, textHeight - 20))
 
-        NoticeSound:Play()
+        -- NoticeSound:Play()
     end)
-
+--[[
     local messages = {
         "Join our Discord ( https://discord.gg/Q9R5FDapth )",
         "!! Be careful do not share your personal info !!",
@@ -348,7 +348,7 @@ local function MainFunction()
                 msgIndex = 1
             end
         end
-    end)
+    end)]]
 end
 task.spawn(MainFunction)
 
