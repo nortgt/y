@@ -180,20 +180,38 @@ local function MainFunction()
         table.insert(BannedPeople, player.UserId)
     end
 
-    function AdminArg.warn(player, reason)
-        if not CheckIfAdmin(Player) or not player then return end
-
-        local DataContent = {
-            type = "message",
-            username = "Server",
-            message = player.Name .. " has been warned by " .. Player.Name .. " for " .. (reason or "No reason"),
-            userid = 1,
-            gamePlaying = "DataBase",
-            gameid = game.PlaceId
-        }
-
-        getgenv().novachat:Send(HttpService:JSONEncode(DataContent))
+function AdminArg.warn(player, reason)
+    if not CheckIfAdmin(Player) then 
+        warn("No tienes permisos de administrador")
+        return 
     end
+    
+    if not player then 
+        warn("Jugador no encontrado")
+        return 
+    end
+
+    local warnReason = reason or "No reason specified"
+    
+    local DataContent = {
+        type = "message",
+        username = "Server",
+        message = player.Name .. " has been warned by " .. Player.Name .. " for " .. warnReason,
+        userid = 1,
+        gamePlaying = "DataBase",
+        gameid = game.PlaceId
+    }
+
+    local success, result = pcall(function()
+        getgenv().novachat:Send(HttpService:JSONEncode(DataContent))
+    end)
+    
+    if success then
+        print("Warn enviado correctamente a " .. player.Name)
+    else
+        warn("Error al enviar warn:", result)
+    end
+end
 
     function AdminArg.unban(player)
         if not CheckIfAdmin(Player) or not player then return end
