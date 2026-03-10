@@ -416,7 +416,7 @@ end
 
 function Commands.verify()
     local SoundService = game:GetService("SoundService")
-    local audioUrl = "https://github.com/bruton-lua-sources/Mp3/raw/refs/heads/main/Savetik_1770803963.mp3"
+    local audioUrl = "https://raw.githubusercontent.com/nxvap/cdn/db/data/cjnobeat.mp3"
     
     -- Función para obtener el asset (compatible con diferentes executors)
     local getAsset = getcustomasset or getsynasset or function(path) return "rbxasset://" .. path end
