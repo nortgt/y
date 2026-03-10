@@ -441,18 +441,6 @@ function Commands.verify()
     sound:Play()
 end
 
--- COMANDO: stopaudio
-function Commands.stopaudio()
-    local SoundService = game:GetService("SoundService")
-    for _, sound in ipairs(SoundService:GetChildren()) do
-        if sound:IsA("Sound") then
-            sound:Stop()
-            sound:Destroy()
-        end
-    end
-    print("✅ Audio detenido")
-end
-
 function Commands.info()
     print("\n📋 COMANDOS DISPONIBLES:")
     for cmd, _ in pairs(Commands) do
