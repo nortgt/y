@@ -246,7 +246,7 @@ local function MainFunction()
             end
         end)
 
-        SendSound:Play()
+        -- SendSound:Play()
         SourceChat.Text = ""
     end
 
@@ -330,7 +330,7 @@ local function MainFunction()
     task.spawn(function()
         local msgIndex = 1
         while true do
-            task.wait(900) 
+            task.wait(5000) 
             
             local DataContent = {
                 type = "message",
