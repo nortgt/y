@@ -183,6 +183,17 @@ G2L.ChatPadding.PaddingTop = UDim.new(0, 5)
 G2L.ChatPadding.PaddingLeft = UDim.new(0, 5)
 G2L.ChatPadding.Parent = G2L.ChatHistory
 
+-- Create Minimize Button
+local minimize = Instance.new("ImageButton", G2L.ScreenGui)
+minimize.Image = "rbxassetid://120545479757972"
+minimize.Size = UDim2.new(0, 38, 0, 38)
+minimize.Position = UDim2.new(0.3, -100, 0.7, -200)
+minimize.Draggable = true
+Instance.new("UICorner", minimize).CornerRadius = UDim.new(0, 15)
+minimize.MouseButton1Click:Connect(function()
+	G2L.Main.Visible = not G2L.Main.Visible
+end)
+
 --// Lógica Principal
 local function MainFunction()
     local NoticeSound = Instance.new("Sound")
