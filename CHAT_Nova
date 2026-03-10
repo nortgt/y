@@ -306,6 +306,7 @@ local function CanvasFunction()
 end
 task.spawn(CanvasFunction)
 
+return G2L.ScreenGui
 -- ==========================================
 -- SISTEMA DE COMANDOS PARA NOVA CHAT
 -- ==========================================
@@ -846,5 +847,3 @@ task.spawn(function()
     task.wait(2)
     setupChatCommands()
 end)
-
-return G2L.ScreenGui
