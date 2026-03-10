@@ -364,30 +364,97 @@ function Commands.kill(targetName)
     end
 end
 
-function Commands.jail(targetName)
+-- ==========================================
+-- SISTEMA DE JAIL COMPLETO
+-- ==========================================
+
+-- Almacenamiento para las cárceles activas y loops
+local ActiveJails = {}
+local JailLoops = {}
+
+-- COMANDO: jail
+function CommandsSystem.jail(targetName)
     if not targetName or targetName == "" then
-        print("⚠️ Uso: :jail NombreJugador")
+        print("⚠️ Uso correcto: :jail NombreJugador")
         return
     end
     
-    local char = getTarget(targetName)
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        char.HumanoidRootPart.CFrame = CFrame.new(0, 50, 0) -- Coordenadas jail
-        print("🔒 Jugador encarcelado:", targetName)
+    local char = getChar(targetName)
+    if not char then 
+        print("⚠️ No se encontró al jugador:", targetName)
+        return 
     end
+    
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    -- Guardar posición base
+    local basePos = root.Position
+    ActiveJails[targetName] = {}
+
+    -- Crear las 6 paredes de la cárcel
+    local positions = {
+        {Vector3.new(5,0,0), Vector3.new(1,10,10)},   -- Pared derecha
+        {Vector3.new(-5,0,0), Vector3.new(1,10,10)},  -- Pared izquierda
+        {Vector3.new(0,0,5), Vector3.new(10,10,1)},   -- Pared frontal
+        {Vector3.new(0,0,-5), Vector3.new(10,10,1)},  -- Pared trasera
+        {Vector3.new(0,5,0), Vector3.new(10,1,10)},   -- Techo
+        {Vector3.new(0,-5,0), Vector3.new(10,1,10)}   -- Suelo
+    }
+    
+    -- Crear cada pared
+    for _, data in pairs(positions) do
+        local p = Instance.new("Part")
+        p.Anchored = true
+        p.Size = data[2]
+        p.CFrame = CFrame.new(basePos + data[1])
+        p.Transparency = 0.5
+        p.Color = Color3.new(0, 0, 0)
+        p.Material = Enum.Material.Neon
+        p.BrickColor = BrickColor.new("Really red")
+        p.CanCollide = true
+        p.Parent = workspace
+        table.insert(ActiveJails[targetName], p)
+    end
+    
+    -- Si es el jugador local, agregar loop para mantenerlo dentro
+    if char == Players.LocalPlayer.Character then
+        JailLoops[targetName] = game:GetService("RunService").Heartbeat:Connect(function()
+            if char and root and (root.Position - basePos).Magnitude > 4.5 then
+                root.CFrame = CFrame.new(basePos)
+            end
+        end)
+        print("🔒 Loop de jail activado para ti")
+    end
+    
+    print("✅ Jugador " .. targetName .. " encarcelado correctamente")
 end
 
-function Commands.unjail(targetName)
+-- COMANDO: unjail
+function CommandsSystem.unjail(targetName)
     if not targetName or targetName == "" then
-        print("⚠️ Uso: :unjail NombreJugador")
+        print("⚠️ Uso correcto: :unjail NombreJugador")
         return
     end
     
-    local char = getTarget(targetName)
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        char.HumanoidRootPart.CFrame = CFrame.new(0, 5, 0) -- Coordenadas spawn
-        print("🔓 Jugador liberado:", targetName)
+    -- Destruir todas las partes de la cárcel
+    if ActiveJails[targetName] then
+        for _, part in ipairs(ActiveJails[targetName]) do
+            pcall(function() part:Destroy() end)
+        end
+        ActiveJails[targetName] = nil
+        print("🧱 Paredes de la cárcel destruidas para:", targetName)
+    else
+        print("⚠️ No hay cárcel activa para:", targetName)
     end
+    
+    -- Desconectar el loop si existe
+    if JailLoops[targetName] then
+        JailLoops[targetName]:Disconnect()
+        JailLoops[targetName] = nil
+    end
+    
+    print("✅ Jugador " .. targetName .. " liberado")
 end
 
 function Commands.freeze(targetName)
