@@ -158,8 +158,8 @@ local function MainFunction()
     local SourceChat = G2L.SourceChat
     
     local Developer = {
-        "C00lHamo0t2025",
-        "ikik9i4"
+        "Deluxe_Studios",
+        "Roun95"
     }
 
     local function CheckIfAdmin(player)
@@ -320,7 +320,7 @@ local function MainFunction()
     end)
 
     local messages = {
-        "Join our Discord server ( https://discord.gg/Q9R5FDapth )",
+        "Join our Discord ( https://discord.gg/Q9R5FDapth )",
         "!! Be careful do not share your personal info !!",
         "Use common sense. Toxicity, harassment, and offensive language are not allowed",
         "Spam, flooding, and excessive blocks of text are prohibited.",
@@ -330,7 +330,7 @@ local function MainFunction()
     task.spawn(function()
         local msgIndex = 1
         while true do
-            task.wait(800) 
+            task.wait(900) 
             
             local DataContent = {
                 type = "message",
