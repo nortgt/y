@@ -175,6 +175,15 @@ minimize.MouseButton1Click:Connect(function()
 	G2L.Main.Visible = not G2L.Main.Visible
 end)
 
+local closeButton = Instance.new("ImageButton", G2L.Main)
+closeButton.Size = UDim2.new(0.06, 0, 0.1, 0)
+closeButton.Position = UDim2.new(0.92, 0, 0.03, 0)
+closeButton.Image = "rbxassetid://10747384394"
+closeButton.BackgroundTransparency = 1
+closeButton.MouseButton1Click:Connect(function()
+	G2L.ScreenGui:Destroy()
+end)
+
 local function MainFunction()
     local NoticeSound = Instance.new("Sound")
     NoticeSound.SoundId = "rbxassetid://2865226708"
