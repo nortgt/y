@@ -99,7 +99,7 @@ G2L.TitleLabel.BackgroundTransparency = 1
 G2L.TitleLabel.RichText = true
 G2L.TitleLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 G2L.TitleLabel.Size = UDim2.new(0.84, 0, 0.1, 0)
-G2L.TitleLabel.Text = "<font color='rgb(242, 111, 2)'><font face='Arial'>Nova</font></font> <font color='rgb(255, 255, 255)'>Chat BETA</font>"
+G2L.TitleLabel.Text = "<font color='rgb(255, 200, 20)'><font face='Arial'>Nova</font></font> <font color='rgb(255, 255, 255)'>Chat BETA</font>"
 G2L.TitleLabel.Position = UDim2.new(0.46, 0, 0.08, 0)
 G2L.TitleLabel.Parent = G2L.Main
 
@@ -112,7 +112,7 @@ G2L.ChatHistory.TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
 G2L.ChatHistory.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 G2L.ChatHistory.BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
 G2L.ChatHistory.Size = UDim2.new(0.94, 0, 0.62, 0)
-G2L.ChatHistory.ScrollBarImageColor3 = Color3.fromRGB(255, 141, 0)
+G2L.ChatHistory.ScrollBarImageColor3 = Color3.fromRGB(242, 242, 242)
 G2L.ChatHistory.Position = UDim2.new(0.03, 0, 0.18, 0)
 G2L.ChatHistory.ScrollBarThickness = 3
 G2L.ChatHistory.BackgroundTransparency = 0.65
