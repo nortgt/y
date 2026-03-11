@@ -28,19 +28,49 @@ G2L.Main.Position = UDim2.new(0.5, 0, 0.5, 0)
 G2L.Main.BackgroundTransparency = 0.05
 G2L.Main.Parent = G2L.ScreenGui
 
+local MainGradient = Instance.new("UIGradient")
+MainGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(248, 248, 248)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+})
+MainGradient.Rotation = 60
+MainGradient.Parent = G2L.Main
+
 G2L.Line = Instance.new("Frame")
 G2L.Line.Name = "Line"
 G2L.Line.ZIndex = 2
 G2L.Line.BorderSizePixel = 0
-G2L.Line.BackgroundColor3 = Color3.fromRGB(255, 141, 0)
+G2L.Line.BackgroundColor3 = Color3.fromRGB(248, 248, 248)
 G2L.Line.AnchorPoint = Vector2.new(0.5, 0.5)
 G2L.Line.Size = UDim2.new(0.9, 0, 0.005, 0)
 G2L.Line.Position = UDim2.new(0.5, 0, 0.15, 0)
 G2L.Line.Parent = G2L.Main
 
+local LineGradient = Instance.new("UIGradient")
+LineGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(248, 248, 248)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+})
+LineGradient.Parent = G2L.Line
+
 G2L.MainStroke = Instance.new("UIStroke")
-G2L.MainStroke.Color = Color3.fromRGB(255, 145, 10)
+G2L.MainStroke.Color = Color3.fromRGB(248, 248, 248)
 G2L.MainStroke.Parent = G2L.Main
+
+local MainStrokeGradient = Instance.new("UIGradient")
+MainStrokeGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(248, 248, 248)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+})
+MainStrokeGradient.Rotation = 30
+MainStrokeGradient.Parent = G2L.MainStroke
+
+local TitleLabelGradient = Instance.new("UIGradient")
+TitleLabelGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(248, 248, 248)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+})
+TitleLabelGradient.Parent = G2L.TitleLabel
 
 G2L.SourceChat = Instance.new("TextBox")
 G2L.SourceChat.Name = "SourceChat"
@@ -76,7 +106,7 @@ G2L.SendButton.Name = "SendAsync"
 G2L.SendButton.BorderSizePixel = 0
 G2L.SendButton.BackgroundTransparency = 1
 G2L.SendButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-G2L.SendButton.ImageColor3 = Color3.fromRGB(255, 141, 0)
+G2L.SendButton.ImageColor3 = Color3.fromRGB(248, 248, 248)
 G2L.SendButton.ZIndex = 3
 G2L.SendButton.AnchorPoint = Vector2.new(0.5, 0.5)
 G2L.SendButton.Image = "rbxassetid://18940312887"
@@ -103,6 +133,13 @@ G2L.TitleLabel.Text = "<font color='rgb(255, 200, 20)'><font face='Arial'>Nova</
 G2L.TitleLabel.Position = UDim2.new(0.46, 0, 0.08, 0)
 G2L.TitleLabel.Parent = G2L.Main
 
+local TitleLabelGradient = Instance.new("UIGradient")
+TitleLabelGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(248, 248, 248)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
+})
+TitleLabelGradient.Parent = G2L.TitleLabel
+
 G2L.ChatHistory = Instance.new("ScrollingFrame")
 G2L.ChatHistory.Name = "ChatHistory"
 G2L.ChatHistory.Active = true
@@ -112,7 +149,7 @@ G2L.ChatHistory.TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
 G2L.ChatHistory.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 G2L.ChatHistory.BottomImage = "rbxasset://textures/ui/Scroll/scroll-middle.png"
 G2L.ChatHistory.Size = UDim2.new(0.94, 0, 0.62, 0)
-G2L.ChatHistory.ScrollBarImageColor3 = Color3.fromRGB(242, 242, 242)
+G2L.ChatHistory.ScrollBarImageColor3 = Color3.fromRGB(248, 248, 248)
 G2L.ChatHistory.Position = UDim2.new(0.03, 0, 0.18, 0)
 G2L.ChatHistory.ScrollBarThickness = 3
 G2L.ChatHistory.BackgroundTransparency = 0.65
