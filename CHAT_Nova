@@ -13,12 +13,12 @@ local UserInputService = game:GetService("UserInputService")
 local Player = Players.LocalPlayer
 
 -- =============================================
--- 🛡️ SISTEMA ANTI-FLOOD (de Trez Chat)
+-- 🛡️ SISTEMA ANTI-FLOOD (de Trez Chat) - CORREGIDO
 -- =============================================
 local AntiFlood = {
     -- Configuración
     Config = {
-        CooldownTime = 5,           -- Segundos entre mensajes
+        CooldownTime = 2.5,           -- Segundos entre mensajes
         MaxRepeatedMessages = 2,       -- Máx veces mismo mensaje
         MaxSimilarity = 0.85,          -- 85% similitud = repetido
         MaxCapsPercentage = 0.7,         -- 70% MAYÚSCULAS = spam
@@ -89,14 +89,17 @@ local AntiFlood = {
             if warnings >= 5 then
                 -- Silenciar temporalmente (5+ advertencias)
                 self.State.LastMessageTime = currentTime + 30  -- 30 segundos de silencio
-                warningMessage = "🔇 Has sido silenciado 30 segundos por spam excesivo"
+                warningMessage = "🔇 " .. playerName .. " ha sido silenciado 30 segundos por spam excesivo"
             elseif warnings >= 3 then
                 -- Cooldown extendido (3-4 advertencias)
                 self.State.LastMessageTime = currentTime + 10  -- 10 segundos extra
-                warningMessage = "⚠️ Advertencia #" .. warnings .. ": " .. (primaryIssue or issues[1])
+                warningMessage = "⚠️ Advertencia #" .. warnings .. " para " .. playerName .. ": " .. (primaryIssue or issues[1])
             end
             
-            return false, issues, warningMessage
+            -- Enviar la advertencia al chat INMEDIATAMENTE
+            self:SendWarning(warningMessage)
+            
+            return false, issues
         end
         
         -- Todo bien, actualizar estado
@@ -104,7 +107,7 @@ local AntiFlood = {
         self.State.LastMessageContent = message
         self.State.UserWarnings[playerName] = math.max(0, warnings - 0.5)  -- Decae con el tiempo
         
-        return true, {}, nil
+        return true, {}
     end,
     
     -- Calcular similitud entre dos textos
@@ -132,10 +135,12 @@ local AntiFlood = {
     
     -- Enviar advertencia al chat
     SendWarning = function(self, warningMessage)
+        if not warningMessage then return end
+        
         local DataContent = {
             type = "message",
             username = "Server",
-            message = warningMessage or "Use the chat with moderation",
+            message = warningMessage,
             userid = 1,
             gamePlaying = "DataBase",
             gameid = game.PlaceId
@@ -350,14 +355,10 @@ local function MainFunction()
         if SourceChat.Text == "" then return end
 
         -- 🛡️ ANTI-FLOOD: Verificar mensaje
-        local isAllowed, issues, warningMsg = AntiFlood:Check(SourceChat.Text)
+        local isAllowed, issues = AntiFlood:Check(SourceChat.Text)
         
         if not isAllowed then
-            -- Enviar advertencia al chat
-            if warningMsg then
-                AntiFlood:SendWarning(warningMsg)
-            end
-            
+            -- El warning ya se envió automáticamente desde AntiFlood:Check()
             SourceChat.Text = ""
             return
         end
