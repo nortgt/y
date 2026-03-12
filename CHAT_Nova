@@ -12,6 +12,151 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local UserInputService = game:GetService("UserInputService")
 local Player = Players.LocalPlayer
 
+-- =============================================
+-- 🛡️ SISTEMA ANTI-FLOOD (de Trez Chat)
+-- =============================================
+local AntiFlood = {
+    -- Configuración
+    Config = {
+        CooldownTime = 2.5,           -- Segundos entre mensajes
+        MaxMessageLength = 200,        -- Máx caracteres
+        MaxRepeatedMessages = 2,       -- Máx veces mismo mensaje
+        MaxSimilarity = 0.85,          -- 85% similitud = repetido
+        BurstLimit = 5,                 -- Máx mensajes en X segundos
+        BurstWindow = 10,                -- Ventana de tiempo para burst
+        MaxCapsPercentage = 0.7,         -- 70% MAYÚSCULAS = spam
+    },
+    
+    -- Estado interno
+    State = {
+        LastMessageTime = 0,
+        LastMessageContent = "",
+        RepeatCount = 0,
+        MessageHistory = {},
+        UserWarnings = {},
+    },
+    
+    -- Función principal de verificación
+    Check = function(self, message)
+        local currentTime = os.clock()
+        local playerName = Player.Name
+        local issues = {}
+        
+        -- Inicializar historial si no existe
+        if not self.State.MessageHistory[playerName] then
+            self.State.MessageHistory[playerName] = {}
+            self.State.UserWarnings[playerName] = 0
+        end
+        
+        local history = self.State.MessageHistory[playerName]
+        local warnings = self.State.UserWarnings[playerName]
+        
+        -- 1. VERIFICAR COOLDOWN BÁSICO
+        if currentTime - self.State.LastMessageTime < self.Config.CooldownTime then
+            local waitTime = math.ceil(self.Config.CooldownTime - (currentTime - self.State.LastMessageTime))
+            table.insert(issues, "⏳ Espera " .. waitTime .. " segundos")
+        end
+        
+        -- 2. VERIFICAR LONGITUD
+        if #message > self.Config.MaxMessageLength then
+            table.insert(issues, "📏 Mensaje muy largo (máx " .. self.Config.MaxMessageLength .. " caracteres)")
+        elseif #message < 1 then
+            table.insert(issues, "❓ Mensaje vacío")
+        end
+        
+        -- 3. VERIFICAR MENSAJES REPETIDOS
+        local similarity = self:CalculateSimilarity(message, self.State.LastMessageContent)
+        if similarity > self.Config.MaxSimilarity then
+            self.State.RepeatCount = self.State.RepeatCount + 1
+            if self.State.RepeatCount >= self.Config.MaxRepeatedMessages then
+                table.insert(issues, "🔄 No envíes el mismo mensaje repetido")
+            end
+        else
+            self.State.RepeatCount = 0
+        end
+        
+        -- 4. VERIFICAR BURST (muchos mensajes en poco tiempo)
+        table.insert(history, currentTime)
+        local cutoff = currentTime - self.Config.BurstWindow
+        while #history > 0 and history[1] < cutoff do
+            table.remove(history, 1)
+        end
+        
+        if #history > self.Config.BurstLimit then
+            table.insert(issues, "⚡ Demasiados mensajes en " .. self.Config.BurstWindow .. " segundos")
+        end
+        
+        -- 5. VERIFICAR MAYÚSCULAS EXCESIVAS
+        local capsCount = 0
+        for char in message:gmatch(".") do
+            if char:match("%u") then capsCount = capsCount + 1 end
+        end
+        local capsRatio = #message > 0 and capsCount / #message or 0
+        if capsRatio > self.Config.MaxCapsPercentage and #message > 10 then
+            table.insert(issues, "🔊 Demasiadas MAYÚSCULAS")
+        end
+        
+        -- 6. SISTEMA DE ADVERTENCIAS PROGRESIVO
+        if #issues > 0 then
+            self.State.UserWarnings[playerName] = warnings + 1
+            
+            -- Mostrar advertencia específica
+            local warningMsg = "⚠️ Anti-Flood: " .. issues[1]
+            if #issues > 1 then
+                warningMsg = warningMsg .. " (+" .. (#issues-1) .. " problemas más)"
+            end
+            
+            -- Advertencias por nivel
+            if warnings >= 5 then
+                -- Silenciar temporalmente (5+ advertencias)
+                self.State.LastMessageTime = currentTime + 30  -- 30 segundos de silencio
+                warn("🚫 " .. playerName .. " silenciado 30s por spam")
+                table.insert(issues, "🔇 Silenciado 30 segundos")
+            elseif warnings >= 3 then
+                -- Cooldown extendido (3-4 advertencias)
+                self.State.LastMessageTime = currentTime + 10  -- 10 segundos extra
+                warn("⚠️ " .. playerName .. " advertencia #" .. warnings)
+            end
+            
+            return false, issues, warningMsg
+        end
+        
+        -- Todo bien, actualizar estado
+        self.State.LastMessageTime = currentTime
+        self.State.LastMessageContent = message
+        self.State.UserWarnings[playerName] = math.max(0, warnings - 0.5)  -- Decae con el tiempo
+        
+        return true, {}, nil
+    end,
+    
+    -- Calcular similitud entre dos textos
+    CalculateSimilarity = function(self, text1, text2)
+        if not text1 or not text2 or text1 == "" or text2 == "" then return 0 end
+        
+        text1 = text1:lower()
+        text2 = text2:lower()
+        
+        if text1 == text2 then return 1 end
+        
+        local len1, len2 = #text1, #text2
+        local maxLen = math.max(len1, len2)
+        if maxLen == 0 then return 1 end
+        
+        local matches = 0
+        for i = 1, math.min(len1, len2) do
+            if text1:sub(i,i) == text2:sub(i,i) then
+                matches = matches + 1
+            end
+        end
+        
+        return matches / maxLen
+    end,
+}
+
+-- =============================================
+-- FIN SISTEMA ANTI-FLOOD
+-- =============================================
+
 G2L.ScreenGui = Instance.new("ScreenGui")
 G2L.ScreenGui.Name = "NovaChat"
 G2L.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -64,13 +209,6 @@ MainStrokeGradient.Color = ColorSequence.new({
 })
 MainStrokeGradient.Rotation = 30
 MainStrokeGradient.Parent = G2L.MainStroke
-
-local TitleLabelGradient = Instance.new("UIGradient")
-TitleLabelGradient.Color = ColorSequence.new({
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(248, 248, 248)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0))
-})
-TitleLabelGradient.Parent = G2L.TitleLabel
 
 G2L.SourceChat = Instance.new("TextBox")
 G2L.SourceChat.Name = "SourceChat"
@@ -207,8 +345,27 @@ local function MainFunction()
 
     getgenv().novachat = WebSocket.connect("wss://free.blr2.piesocket.com/v3/1?api_key=eLudeCBiiTiQSr6DWJPMPfpZK9B6ghEu90ZbJwzm&notify_self=1")
 
+    -- =============================================
+    -- FUNCIÓN sendMessage MODIFICADA CON ANTI-FLOOD
+    -- =============================================
     local function sendMessage()
         if SourceChat.Text == "" then return end
+
+        -- 🛡️ ANTI-FLOOD: Verificar mensaje
+        local isAllowed, issues, warningMsg = AntiFlood:Check(SourceChat.Text)
+        
+        if not isAllowed then
+            -- Mostrar advertencia en el placeholder
+            if warningMsg then
+                local originalPlaceholder = SourceChat.PlaceholderText
+                SourceChat.PlaceholderText = warningMsg
+                task.wait(2)
+                SourceChat.PlaceholderText = originalPlaceholder
+            end
+            
+            SourceChat.Text = ""
+            return
+        end
 
         task.spawn(function()
             local DataContent = {
@@ -232,6 +389,9 @@ local function MainFunction()
         SendSound:Play()
         SourceChat.Text = ""
     end
+    -- =============================================
+    -- FIN DE FUNCIÓN MODIFICADA
+    -- =============================================
 
     SendAsync.MouseButton1Click:Connect(sendMessage)
     SourceChat.FocusLost:Connect(function(enterPressed)
@@ -380,25 +540,6 @@ local function getTarget(targetName)
 end
 
 -- ==========================================
--- PLANTILLA PARA NUEVOS COMANDOS
--- ==========================================
---[[
-function Commands.nuevoComando(targetName)
-    -- Verificar si se requiere objetivo
-    if not targetName or targetName == "" then
-        print("⚠️ Uso: :nuevocomando NombreJugador")
-        return
-    end
-    
-    local char = getTarget(targetName)
-    if char then
-        -- Implementación aquí
-        print("✅ Comando ejecutado en:", targetName)
-    end
-end
-]]
-
--- ==========================================
 -- COMANDOS IMPLEMENTADOS
 -- ==========================================
 
@@ -425,7 +566,7 @@ function Commands.jail(targetName)
         return
     end
     
-    local char = getChar(targetName)
+    local char = getTarget(targetName)
     if not char then 
         print("⚠️ No se encontró al jugador:", targetName)
         return 
