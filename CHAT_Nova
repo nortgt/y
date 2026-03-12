@@ -18,7 +18,7 @@ local Player = Players.LocalPlayer
 local AntiFlood = {
     -- Configuración
     Config = {
-        CooldownTime = 2.5,           -- Segundos entre mensajes
+        CooldownTime = 5,           -- Segundos entre mensajes
         MaxRepeatedMessages = 2,       -- Máx veces mismo mensaje
         MaxSimilarity = 0.85,          -- 85% similitud = repetido
         MaxCapsPercentage = 0.7,         -- 70% MAYÚSCULAS = spam
@@ -135,7 +135,7 @@ local AntiFlood = {
         local DataContent = {
             type = "message",
             username = "Server",
-            message = warningMessage,
+            message = warningMessage or "Use the chat with moderation",
             userid = 1,
             gamePlaying = "DataBase",
             gameid = game.PlaceId
