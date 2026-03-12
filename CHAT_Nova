@@ -19,11 +19,8 @@ local AntiFlood = {
     -- Configuración
     Config = {
         CooldownTime = 2.5,           -- Segundos entre mensajes
-        MaxMessageLength = 200,        -- Máx caracteres
         MaxRepeatedMessages = 2,       -- Máx veces mismo mensaje
         MaxSimilarity = 0.85,          -- 85% similitud = repetido
-        BurstLimit = 5,                 -- Máx mensajes en X segundos
-        BurstWindow = 10,                -- Ventana de tiempo para burst
         MaxCapsPercentage = 0.7,         -- 70% MAYÚSCULAS = spam
     },
     
@@ -32,7 +29,6 @@ local AntiFlood = {
         LastMessageTime = 0,
         LastMessageContent = "",
         RepeatCount = 0,
-        MessageHistory = {},
         UserWarnings = {},
     },
     
@@ -41,84 +37,66 @@ local AntiFlood = {
         local currentTime = os.clock()
         local playerName = Player.Name
         local issues = {}
+        local primaryIssue = nil
         
-        -- Inicializar historial si no existe
-        if not self.State.MessageHistory[playerName] then
-            self.State.MessageHistory[playerName] = {}
+        -- Inicializar warnings si no existe
+        if not self.State.UserWarnings[playerName] then
             self.State.UserWarnings[playerName] = 0
         end
         
-        local history = self.State.MessageHistory[playerName]
         local warnings = self.State.UserWarnings[playerName]
         
         -- 1. VERIFICAR COOLDOWN BÁSICO
         if currentTime - self.State.LastMessageTime < self.Config.CooldownTime then
             local waitTime = math.ceil(self.Config.CooldownTime - (currentTime - self.State.LastMessageTime))
-            table.insert(issues, "⏳ Espera " .. waitTime .. " segundos")
+            primaryIssue = "⏳ Espera " .. waitTime .. " segundos"
+            table.insert(issues, primaryIssue)
         end
         
-        -- 2. VERIFICAR LONGITUD
-        if #message > self.Config.MaxMessageLength then
-            table.insert(issues, "📏 Mensaje muy largo (máx " .. self.Config.MaxMessageLength .. " caracteres)")
-        elseif #message < 1 then
-            table.insert(issues, "❓ Mensaje vacío")
-        end
-        
-        -- 3. VERIFICAR MENSAJES REPETIDOS
-        local similarity = self:CalculateSimilarity(message, self.State.LastMessageContent)
-        if similarity > self.Config.MaxSimilarity then
-            self.State.RepeatCount = self.State.RepeatCount + 1
-            if self.State.RepeatCount >= self.Config.MaxRepeatedMessages then
-                table.insert(issues, "🔄 No envíes el mismo mensaje repetido")
+        -- 2. VERIFICAR MENSAJES REPETIDOS (solo si hay mensaje previo)
+        if self.State.LastMessageContent and self.State.LastMessageContent ~= "" then
+            local similarity = self:CalculateSimilarity(message, self.State.LastMessageContent)
+            if similarity > self.Config.MaxSimilarity then
+                self.State.RepeatCount = self.State.RepeatCount + 1
+                if self.State.RepeatCount >= self.Config.MaxRepeatedMessages then
+                    primaryIssue = "🔄 No envíes el mismo mensaje repetido"
+                    table.insert(issues, primaryIssue)
+                end
+            else
+                self.State.RepeatCount = 0
             end
-        else
-            self.State.RepeatCount = 0
         end
         
-        -- 4. VERIFICAR BURST (muchos mensajes en poco tiempo)
-        table.insert(history, currentTime)
-        local cutoff = currentTime - self.Config.BurstWindow
-        while #history > 0 and history[1] < cutoff do
-            table.remove(history, 1)
-        end
-        
-        if #history > self.Config.BurstLimit then
-            table.insert(issues, "⚡ Demasiados mensajes en " .. self.Config.BurstWindow .. " segundos")
-        end
-        
-        -- 5. VERIFICAR MAYÚSCULAS EXCESIVAS
+        -- 3. VERIFICAR MAYÚSCULAS EXCESIVAS
         local capsCount = 0
         for char in message:gmatch(".") do
             if char:match("%u") then capsCount = capsCount + 1 end
         end
         local capsRatio = #message > 0 and capsCount / #message or 0
         if capsRatio > self.Config.MaxCapsPercentage and #message > 10 then
-            table.insert(issues, "🔊 Demasiadas MAYÚSCULAS")
+            primaryIssue = "🔊 Demasiadas MAYÚSCULAS"
+            table.insert(issues, primaryIssue)
         end
         
-        -- 6. SISTEMA DE ADVERTENCIAS PROGRESIVO
+        -- 4. SISTEMA DE ADVERTENCIAS PROGRESIVO
         if #issues > 0 then
             self.State.UserWarnings[playerName] = warnings + 1
             
-            -- Mostrar advertencia específica
-            local warningMsg = "⚠️ Anti-Flood: " .. issues[1]
-            if #issues > 1 then
-                warningMsg = warningMsg .. " (+" .. (#issues-1) .. " problemas más)"
-            end
+            -- Construir mensaje de advertencia
+            local warningMessage = "⚠️ Anti-Flood: " .. (primaryIssue or issues[1])
             
             -- Advertencias por nivel
             if warnings >= 5 then
                 -- Silenciar temporalmente (5+ advertencias)
                 self.State.LastMessageTime = currentTime + 30  -- 30 segundos de silencio
-                warn("🚫 " .. playerName .. " silenciado 30s por spam")
-                table.insert(issues, "🔇 Silenciado 30 segundos")
+                warningMessage = "🔇 Has sido silenciado 30 segundos por spam excesivo"
             elseif warnings >= 3 then
                 -- Cooldown extendido (3-4 advertencias)
                 self.State.LastMessageTime = currentTime + 10  -- 10 segundos extra
-                warn("⚠️ " .. playerName .. " advertencia #" .. warnings)
+                warningMessage = "⚠️ Advertencia #" .. warnings .. ": " .. (primaryIssue or issues[1])
             end
             
-            return false, issues, warningMsg
+            return false, issues, warningMessage
         end
         
         -- Todo bien, actualizar estado
@@ -151,6 +129,26 @@ local AntiFlood = {
         
         return matches / maxLen
     end,
+    
+    -- Enviar advertencia al chat
+    SendWarning = function(self, warningMessage)
+        local DataContent = {
+            type = "message",
+            username = "Server",
+            message = warningMessage,
+            userid = 1,
+            gamePlaying = "DataBase",
+            gameid = game.PlaceId
+        }
+        
+        local success, result = pcall(function()
+            getgenv().novachat:Send(HttpService:JSONEncode(DataContent))
+        end)
+        
+        if not success then
+            warn("Failed to send warning:", result)
+        end
+    end
 }
 
 -- =============================================
@@ -355,12 +353,9 @@ local function MainFunction()
         local isAllowed, issues, warningMsg = AntiFlood:Check(SourceChat.Text)
         
         if not isAllowed then
-            -- Mostrar advertencia en el placeholder
+            -- Enviar advertencia al chat
             if warningMsg then
-                local originalPlaceholder = SourceChat.PlaceholderText
-                SourceChat.PlaceholderText = warningMsg
-                task.wait(2)
-                SourceChat.PlaceholderText = originalPlaceholder
+                AntiFlood:SendWarning(warningMsg)
             end
             
             SourceChat.Text = ""
@@ -440,6 +435,12 @@ local function MainFunction()
             SenderLabel.TextColor3 = Color3.fromRGB(255, 129, 0)
         end
         SenderLabel.Parent = MessageFrame
+
+        -- Si el mensaje es del Server, darle un estilo especial
+        if Decoded.username == "Server" then
+            SenderLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+            MessageLabel.TextColor3 = Color3.fromRGB(255, 200, 200)
+        end
 
         local MessageLabel = Instance.new("TextLabel")
         MessageLabel.Name = "MessageSource"
