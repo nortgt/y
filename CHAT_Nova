@@ -507,7 +507,7 @@ local function convertCountry()
 	if countryPlayer then
 		return countryPlayer
 	else
-		return countryCode
+		return ""
 	end
 end
 
