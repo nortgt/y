@@ -400,8 +400,22 @@ local function MainFunction()
         local IconCorner = Instance.new("UICorner")
         IconCorner.CornerRadius = UDim.new(1, 0)
         IconCorner.Parent = PlayerIcon
-
+--[[
 -- BANDERA DEL JUGADOR (cerca del icono de avatar)
+local CountryLabel = Instance.new("TextLabel")
+CountryLabel.Name = "CountryFlag"
+CountryLabel.BackgroundTransparency = 1
+CountryLabel.Size = UDim2.new(0, 25, 0, 25)  -- Mismo tamaño que el icono aproximadamente
+CountryLabel.Position = UDim2.new(0, 40, 0, 8)  -- Posicionado a la derecha del icono (que está en x=5)
+CountryLabel.Font = Enum.Font.SourceSans
+CountryLabel.TextSize = 18
+CountryLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+CountryLabel.TextXAlignment = Enum.TextXAlignment.Left
+CountryLabel.TextYAlignment = Enum.TextYAlignment.Top
+CountryLabel.Text = country  -- Usando tu función convertCountry()
+CountryLabel.Parent = MessageFrame  -- Se añade al MessageFrame que contiene el avatar
+]]
+
 local countryCode = game:GetService("LocalizationService"):GetCountryRegionForPlayerAsync(LocalPlayer)
 
 local countryToNationality = {
@@ -497,21 +511,6 @@ local function convertCountry()
 	end
 end
 
-local country = convertCountry()
-
-local CountryLabel = Instance.new("TextLabel")
-CountryLabel.Name = "CountryFlag"
-CountryLabel.BackgroundTransparency = 1
-CountryLabel.Size = UDim2.new(0, 25, 0, 25)  -- Mismo tamaño que el icono aproximadamente
-CountryLabel.Position = UDim2.new(0, 40, 0, 8)  -- Posicionado a la derecha del icono (que está en x=5)
-CountryLabel.Font = Enum.Font.SourceSans
-CountryLabel.TextSize = 18
-CountryLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-CountryLabel.TextXAlignment = Enum.TextXAlignment.Left
-CountryLabel.TextYAlignment = Enum.TextYAlignment.Top
-CountryLabel.Text = country  -- Usando tu función convertCountry()
-CountryLabel.Parent = MessageFrame  -- Se añade al MessageFrame que contiene el avatar
-
         local SenderLabel = Instance.new("TextLabel")
         SenderLabel.Name = "Sender"
         SenderLabel.BackgroundTransparency = 1
@@ -522,7 +521,7 @@ CountryLabel.Parent = MessageFrame  -- Se añade al MessageFrame que contiene el
         SenderLabel.TextXAlignment = Enum.TextXAlignment.Left
         
         if table.find(Developer, Decoded.username) then
-            SenderLabel.Text = Decoded.username .. " ( Owner )"
+            SenderLabel.Text = Decoded.username .. " ( Owner )" .. convertCountry()
             SenderLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
         else
             SenderLabel.Text = Decoded.username .. " ( " .. (Decoded.gamePlaying or "N/A") .. " )"
