@@ -26,7 +26,7 @@ local AntiFlood = {
     Config = {
         CooldownTime = 3,
         MaxRepeatedMessages = 2,
-        MaxSimilarity = 0.1,
+        MaxSimilarity = 0.9,
         MaxCapsPercentage = 0.7,
     },
     
