@@ -13,32 +13,23 @@ local UserInputService = game:GetService("UserInputService")
 local Player = Players.LocalPlayer
 local StarterGui = game:GetService("StarterGui")
 
--- =============================================
--- 🔔 SISTEMA DE NOTIFICACIONES
--- =============================================
 local function notify(title, msg, duration, icon)
-    -- Iconos opcionales: "rbxassetid://1234567890"
     StarterGui:SetCore("SendNotification", {
         Title = title,
         Text = msg,
         Duration = duration or 3,
-        Icon = icon or ""  -- Puedes añadir iconos personalizados después
+        Icon = icon or ""
     })
 end
 
--- =============================================
--- 🛡️ SISTEMA ANTI-FLOOD (MODIFICADO CON NOTIFICACIONES)
--- =============================================
 local AntiFlood = {
-    -- Configuración
     Config = {
-        CooldownTime = 2.5,           -- Segundos entre mensajes
-        MaxRepeatedMessages = 2,       -- Máx veces mismo mensaje
-        MaxSimilarity = 0.85,          -- 85% similitud = repetido
-        MaxCapsPercentage = 0.7,       -- 70% MAYÚSCULAS = spam
+        CooldownTime = 3,
+        MaxRepeatedMessages = 2,
+        MaxSimilarity = 0.85,
+        MaxCapsPercentage = 0.7,
     },
     
-    -- Estado interno
     State = {
         LastMessageTime = 0,
         LastMessageContent = "",
@@ -46,81 +37,67 @@ local AntiFlood = {
         UserWarnings = {},
     },
     
-    -- Función principal de verificación
     Check = function(self, message)
         local currentTime = os.clock()
         local playerName = Player.Name
         local issues = {}
         
-        -- Inicializar warnings si no existe
         if not self.State.UserWarnings[playerName] then
             self.State.UserWarnings[playerName] = 0
         end
         
         local warnings = self.State.UserWarnings[playerName]
         
-        -- 1. VERIFICAR COOLDOWN BÁSICO
         if currentTime - self.State.LastMessageTime < self.Config.CooldownTime then
             local waitTime = math.ceil(self.Config.CooldownTime - (currentTime - self.State.LastMessageTime))
-            table.insert(issues, "⏳ Espera " .. waitTime .. " segundos")
+            table.insert(issues, "Cooldown " .. waitTime .. " segundos")
         end
         
-        -- 2. VERIFICAR MENSAJES REPETIDOS (solo si hay mensaje previo)
         if self.State.LastMessageContent and self.State.LastMessageContent ~= "" then
             local similarity = self:CalculateSimilarity(message, self.State.LastMessageContent)
             if similarity > self.Config.MaxSimilarity then
                 self.State.RepeatCount = self.State.RepeatCount + 1
                 if self.State.RepeatCount >= self.Config.MaxRepeatedMessages then
-                    table.insert(issues, "🔄 No envíes el mismo mensaje repetido")
+                    table.insert(issues, "Do not spam messages")
                 end
             else
                 self.State.RepeatCount = 0
             end
         end
         
-        -- 3. VERIFICAR MAYÚSCULAS EXCESIVAS
         local capsCount = 0
         for char in message:gmatch(".") do
             if char:match("%u") then capsCount = capsCount + 1 end
         end
         local capsRatio = #message > 0 and capsCount / #message or 0
         if capsRatio > self.Config.MaxCapsPercentage and #message > 10 then
-            table.insert(issues, "🔊 Demasiadas MAYÚSCULAS")
+            table.insert(issues, "Do not send too many capital letters")
         end
         
-        -- 4. SISTEMA DE ADVERTENCIAS PROGRESIVO CON NOTIFICACIONES
         if #issues > 0 then
             self.State.UserWarnings[playerName] = warnings + 1
             
-            -- Mostrar advertencia como notificación
-            local warningTitle = "⚠️ ANTI-FLOOD"
+            local warningTitle = "ANTI-FLOOD SYSTEM"
             local warningMsg = issues[1]
             
             if #issues > 1 then
                 warningMsg = warningMsg .. " (+" .. (#issues-1) .. " problemas más)"
             end
             
-            -- Mostrar notificación principal
             notify(warningTitle, warningMsg, 3)
             
-            -- Advertencias por nivel (con notificaciones específicas)
             if warnings >= 5 then
-                -- Silenciar temporalmente (5+ advertencias)
-                self.State.LastMessageTime = currentTime + 30  -- 30 segundos de silencio
-                warn("🚫 " .. playerName .. " silenciado 30s por spam")
-                notify("🔇 SILENCIADO", "Has sido silenciado por 30 segundos debido a spam excesivo", 5)
-                table.insert(issues, "🔇 Silenciado 30 segundos")
+                self.State.LastMessageTime = currentTime + 60
+                notify("🚫 ANTI-SPAM", "muted 60s for spam", 5)
+                table.insert(issues, "🚫 muted 60 seconds")
             elseif warnings >= 3 then
-                -- Cooldown extendido (3-4 advertencias)
-                self.State.LastMessageTime = currentTime + 10  -- 10 segundos extra
-                notify("⚠️ ADVERTENCIA #" .. warnings, "Has recibido " .. warnings .. " advertencias. Comportamiento moderado.", 4)
-                warn("⚠️ " .. playerName .. " advertencia #" .. warnings)
+                self.State.LastMessageTime = currentTime + 15
+                notify("⚠️ WARNING #" .. warnings, "you have received " .. warnings .. " warnings for bad behavior", 4)
             end
             
             return false, issues
         end
         
-        -- Todo bien, actualizar estado
         self.State.LastMessageTime = currentTime
         self.State.LastMessageContent = message
         self.State.UserWarnings[playerName] = math.max(0, warnings - 0.5)  -- Decae con el tiempo
@@ -128,7 +105,6 @@ local AntiFlood = {
         return true, {}
     end,
     
-    -- Calcular similitud entre dos textos
     CalculateSimilarity = function(self, text1, text2)
         if not text1 or not text2 or text1 == "" or text2 == "" then return 0 end
         
@@ -151,10 +127,6 @@ local AntiFlood = {
         return matches / maxLen
     end,
 }
-
--- =============================================
--- FIN SISTEMA ANTI-FLOOD
--- =============================================
 
 G2L.ScreenGui = Instance.new("ScreenGui")
 G2L.ScreenGui.Name = "NovaChat"
@@ -344,13 +316,9 @@ local function MainFunction()
 
     getgenv().novachat = WebSocket.connect("wss://free.blr2.piesocket.com/v3/1?api_key=eLudeCBiiTiQSr6DWJPMPfpZK9B6ghEu90ZbJwzm&notify_self=1")
 
-    -- =============================================
-    -- FUNCIÓN sendMessage MODIFICADA CON ANTI-FLOOD Y NOTIFICACIONES
-    -- =============================================
     local function sendMessage()
         if SourceChat.Text == "" then return end
 
-        -- 🛡️ ANTI-FLOOD: Verificar mensaje
         local isAllowed, issues = AntiFlood:Check(SourceChat.Text)
         
         if not isAllowed then
@@ -503,10 +471,6 @@ local function CanvasFunction()
 end
 task.spawn(CanvasFunction)
 
--- ==========================================
--- SISTEMA DE COMANDOS OPTIMIZADO
--- ==========================================
-
 local Commands = {}
 
 local Admins = {
@@ -514,7 +478,6 @@ local Admins = {
     "Roun95"
 }
 
--- Helper functions
 local function isAdmin(username)
     for _, admin in ipairs(Admins) do
         if username == admin then return true end
@@ -530,15 +493,11 @@ local function getTarget(targetName)
     return player and player.Character
 end
 
--- ==========================================
--- COMANDOS IMPLEMENTADOS
--- ==========================================
-
 function Commands.kill(targetName)
     local char = getTarget(targetName)
     if char then
         char:BreakJoints()
-        notify("💀 COMANDO", "Kill ejecutado en: " .. (targetName or "ti mismo"), 3)
+        notify("✅ SUCCESS", "Player dead: " .. (targetName or "you"), 3)
     end
 end
 
@@ -550,16 +509,10 @@ local ActiveJails = {}
 local JailLoops = {}
 
 function Commands.jail(targetName)
-    if not targetName or targetName == "" then
-        notify("⚠️ COMANDO", "Uso correcto: :jail NombreJugador", 4)
-        return
-    end
+    if not targetName or targetName == "" then return end
     
     local char = getTarget(targetName)
-    if not char then 
-        notify("⚠️ ERROR", "No se encontró al jugador: " .. targetName, 4)
-        return 
-    end
+    if not char then return end
     
     local root = char:FindFirstChild("HumanoidRootPart")
     if not root then return end
@@ -583,9 +536,6 @@ function Commands.jail(targetName)
         p.CFrame = CFrame.new(basePos + data[1])
         p.Transparency = 0.5
         p.Color = Color3.new(0, 0, 0)
-        p.Material = Enum.Material.Neon
-        p.BrickColor = BrickColor.new("Really red")
-        p.CanCollide = true
         p.Parent = workspace
         table.insert(ActiveJails[targetName], p)
     end
@@ -598,20 +548,19 @@ function Commands.jail(targetName)
         end)
     end
     
-    notify("🔒 JAIL", "Jugador " .. targetName .. " encarcelado correctamente", 4)
+    notify("✅ SUCCESS ", "Player " .. targetName .. " jailed", 4)
 end
 
 function Commands.unjail(targetName)
-    if not targetName or targetName == "" then
-        notify("⚠️ COMANDO", "Uso correcto: :unjail NombreJugador", 4)
-        return
-    end
+    if not targetName or targetName == "" then return end
     
     if ActiveJails[targetName] then
         for _, part in ipairs(ActiveJails[targetName]) do
-            pcall(function() part:Destroy() end)
+            part:Destroy()
         end
         ActiveJails[targetName] = nil
+    else
+        notify("⚠️ No jail found for:", targetName)
     end
     
     if JailLoops[targetName] then
@@ -619,17 +568,16 @@ function Commands.unjail(targetName)
         JailLoops[targetName] = nil
     end
     
-    notify("🔓 UNJAIL", "Jugador " .. targetName .. " liberado", 4)
+    notify("✅ SUCCESS ", "Player " .. targetName .. " unjailed", 4)
 end
 
 function Commands.freeze(targetName)
     local char = getTarget(targetName)
     if char then
-        local humanoid = char:FindFirstChild("Humanoid")
-        if humanoid then
-            humanoid.WalkSpeed = 0
-            humanoid.JumpPower = 0
-            notify("❄️ FREEZE", "Jugador congelado: " .. (targetName or "ti mismo"), 3)
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.Anchored = true
+            notify("✅ SUCCESS ", "freeze: " .. (targetName or "you"), 3)
         end
     end
 end
@@ -637,16 +585,15 @@ end
 function Commands.unfreeze(targetName)
     local char = getTarget(targetName)
     if char then
-        local humanoid = char:FindFirstChild("Humanoid")
-        if humanoid then
-            humanoid.WalkSpeed = 16
-            humanoid.JumpPower = 50
-            notify("🔥 UNFREEZE", "Jugador descongelado: " .. (targetName or "ti mismo"), 3)
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.Anchored = false
+            notify("✅ SUCCESS ", "unfreeze: " .. (targetName or "you"), 3)
         end
     end
 end
 
-function Commands.verify()
+function Commands.music()
     local SoundService = game:GetService("SoundService")
     local audioUrl = "https://raw.githubusercontent.com/nxvap/cdn/db/data/cjnobeat.mp3"
     
@@ -669,31 +616,25 @@ function Commands.verify()
     sound.Parent = SoundService
     sound:Play()
     
-    notify("🎵 VERIFY", "Reproduciendo audio de verificación", 3)
+    notify("MUSIC", "Playing sound", 3)
 end
 
 function Commands.info()
-    local cmdList = ""
-    for cmd, _ in pairs(Commands) do
-        cmdList = cmdList .. ":" .. cmd .. "  "
-    end
-    notify("📋 COMANDOS", cmdList, 8)
-    print("\n📋 COMANDOS DISPONIBLES:")
+    print("\n📋 COMMANDS AVAILABLE:")
     for cmd, _ in pairs(Commands) do
         print("  :" .. cmd)
     end
-    print("")
 end
 
--- ==========================================
--- PROCESADOR DE COMANDOS
--- ==========================================
+-- ===============
+-- PROCESS COMMANDS
+-- ===============
 
 local function ProcessCommand(message, username)
     if string.sub(message, 1, 1) ~= ":" then return end
     
     if not isAdmin(username) then
-        warn("⛔ Comando bloqueado - Usuario sin permisos:", username)
+        notify("⛔ Access blocked: You do not have permission ", username)
         return
     end
     
@@ -709,17 +650,13 @@ local function ProcessCommand(message, username)
     if Commands[cmd] then
         local success, err = pcall(Commands[cmd], args)
         if not success then
-            warn("❌ Error en comando :" .. cmd .. ":", err)
-            notify("❌ ERROR", "Error al ejecutar comando: " .. cmd, 4)
+            warn("❌ COMMAND ERROR: " .. cmd .. ":", err)
+            notify("❌ ERROR", "There was an error while executing the command: " .. cmd, 4)
         end
     else
-        notify("❓ COMANDO", "Comando no reconocido: :" .. cmd .. "\nUsa :info para ver comandos", 5)
+        notify("❓ ERROR", "Command not found: " .. cmd .. "\nUse :info to see the list of commands", 5)
     end
 end
-
--- ==========================================
--- CONEXIÓN
--- ==========================================
 
 task.spawn(function()
     for i = 1, 10 do
@@ -730,8 +667,7 @@ task.spawn(function()
                     ProcessCommand(Decoded.message, Decoded.username)
                 end
             end)
-            print("👥 Admins:", table.concat(Admins, ", "))
-            print("📝 Usa :info para ver comandos")
+            print("Admins:", table.concat(Admins, ", "))
             break
         end
         task.wait(1)
