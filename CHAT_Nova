@@ -50,7 +50,7 @@ local AntiFlood = {
         
         if currentTime - self.State.LastMessageTime < self.Config.CooldownTime then
             local waitTime = math.ceil(self.Config.CooldownTime - (currentTime - self.State.LastMessageTime))
-            table.insert(issues, "Cooldown " .. waitTime .. " segundos")
+            table.insert(issues, "Cooldown " .. waitTime .. " seconds")
         end
         
         if self.State.LastMessageContent and self.State.LastMessageContent ~= "" then
