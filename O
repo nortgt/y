@@ -587,29 +587,6 @@ createParticleEmitter("Fog2", fogDebris, {
     ZOffset = -1.1
 })
 
--- Efecto 1
-createParticleEmitter("1", fogDebris, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.10401, 0),
-        NumberSequenceKeypoint.new(0.497494, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 5.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 6.6875),
-        NumberSequenceKeypoint.new(1, 6.125)
-    }),
-    Lifetime = NumberRange.new(2, 2),
-    Rate = 10,
-    Speed = NumberRange.new(20, 20),
-    LockedToPart = false,
-    LightEmission = 1,
-    Texture = "rbxassetid://125036749142348",
-    ZOffset = 0.099
-})
-
 -- Efecto 2
 createParticleEmitter("2", fogDebris, {
     Transparency = NumberSequence.new({
