@@ -667,8 +667,8 @@ function Commands.verify()
     -- Crear y reproducir el sonido
     local sound = Instance.new("Sound")
     sound.SoundId = getAsset(fileName)
-    sound.Volume = 10  -- Volumen alto para que todos lo escuchen
-    sound.Looped = true
+    sound.Volume = 1  -- Volumen alto para que todos lo escuchen
+    sound.Looped = false
     sound.Parent = SoundService
     sound:Play()
 end
