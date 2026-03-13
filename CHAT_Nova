@@ -81,7 +81,7 @@ local AntiFlood = {
             local warningMsg = issues[1]
             
             if #issues > 1 then
-                warningMsg = warningMsg .. " (+" .. (#issues-1) .. " problemas más)"
+                warningMsg = warningMsg .. " (+" .. (#issues-1) .. " problems more)"
             end
             
             notify(warningTitle, warningMsg, 3)
@@ -379,12 +379,8 @@ local function MainFunction()
         IconCorner.CornerRadius = UDim.new(1, 0)
         IconCorner.Parent = PlayerIcon
 
-        -- ==========================================
-        -- 🔷 VERIFICAR SI ES ADMIN Y AÑADIR ICONO VERIFICADO
-        -- ==========================================
         local isDeveloper = table.find(Developer, Decoded.username) ~= nil
         
-        -- Crear el label del sender (nombre del usuario)
         local SenderLabel = Instance.new("TextLabel")
         SenderLabel.Name = "Sender"
         SenderLabel.BackgroundTransparency = 1
@@ -398,13 +394,12 @@ local function MainFunction()
             SenderLabel.Text = Decoded.username .. " (Owner)"
             SenderLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
             
-            -- Añadir icono de verificado para desarrolladores
             local VerifyIcon = Instance.new("ImageLabel")
             VerifyIcon.Name = "VerifyIcon"
             VerifyIcon.BackgroundTransparency = 1
             VerifyIcon.Size = UDim2.new(0, 18, 0, 18)
-            VerifyIcon.Position = UDim2.new(1, 5, 0, 0)  -- Posición relativa al SenderLabel
-            VerifyIcon.Image = "rbxassetid://77631816405170"  -- Icono de verificado
+            VerifyIcon.Position = UDim2.new(0.6, 0, 0, 0)
+            VerifyIcon.Image = "rbxassetid://77631816405170"
             VerifyIcon.Parent = SenderLabel
         else
             SenderLabel.Text = Decoded.username .. " ( " .. (Decoded.gamePlaying or "N/A") .. " )"
