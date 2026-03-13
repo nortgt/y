@@ -11,9 +11,23 @@ local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
 local UserInputService = game:GetService("UserInputService")
 local Player = Players.LocalPlayer
+local StarterGui = game:GetService("StarterGui")
 
 -- =============================================
--- 🛡️ SISTEMA ANTI-FLOOD
+-- 🔔 SISTEMA DE NOTIFICACIONES
+-- =============================================
+local function notify(title, msg, duration, icon)
+    -- Iconos opcionales: "rbxassetid://1234567890"
+    StarterGui:SetCore("SendNotification", {
+        Title = title,
+        Text = msg,
+        Duration = duration or 3,
+        Icon = icon or ""  -- Puedes añadir iconos personalizados después
+    })
+end
+
+-- =============================================
+-- 🛡️ SISTEMA ANTI-FLOOD (MODIFICADO CON NOTIFICACIONES)
 -- =============================================
 local AntiFlood = {
     -- Configuración
@@ -21,7 +35,7 @@ local AntiFlood = {
         CooldownTime = 2.5,           -- Segundos entre mensajes
         MaxRepeatedMessages = 2,       -- Máx veces mismo mensaje
         MaxSimilarity = 0.85,          -- 85% similitud = repetido
-        MaxCapsPercentage = 0.7,         -- 70% MAYÚSCULAS = spam
+        MaxCapsPercentage = 0.7,       -- 70% MAYÚSCULAS = spam
     },
     
     -- Estado interno
@@ -74,29 +88,36 @@ local AntiFlood = {
             table.insert(issues, "🔊 Demasiadas MAYÚSCULAS")
         end
         
-        -- 4. SISTEMA DE ADVERTENCIAS PROGRESIVO
+        -- 4. SISTEMA DE ADVERTENCIAS PROGRESIVO CON NOTIFICACIONES
         if #issues > 0 then
             self.State.UserWarnings[playerName] = warnings + 1
             
-            -- Mostrar advertencia específica
-            local warningMsg = "⚠️ Anti-Flood: " .. issues[1]
+            -- Mostrar advertencia como notificación
+            local warningTitle = "⚠️ ANTI-FLOOD"
+            local warningMsg = issues[1]
+            
             if #issues > 1 then
                 warningMsg = warningMsg .. " (+" .. (#issues-1) .. " problemas más)"
             end
             
-            -- Advertencias por nivel
+            -- Mostrar notificación principal
+            notify(warningTitle, warningMsg, 3)
+            
+            -- Advertencias por nivel (con notificaciones específicas)
             if warnings >= 5 then
                 -- Silenciar temporalmente (5+ advertencias)
                 self.State.LastMessageTime = currentTime + 30  -- 30 segundos de silencio
                 warn("🚫 " .. playerName .. " silenciado 30s por spam")
+                notify("🔇 SILENCIADO", "Has sido silenciado por 30 segundos debido a spam excesivo", 5)
                 table.insert(issues, "🔇 Silenciado 30 segundos")
             elseif warnings >= 3 then
                 -- Cooldown extendido (3-4 advertencias)
                 self.State.LastMessageTime = currentTime + 10  -- 10 segundos extra
+                notify("⚠️ ADVERTENCIA #" .. warnings, "Has recibido " .. warnings .. " advertencias. Comportamiento moderado.", 4)
                 warn("⚠️ " .. playerName .. " advertencia #" .. warnings)
             end
             
-            return false, issues, warningMsg
+            return false, issues
         end
         
         -- Todo bien, actualizar estado
@@ -104,7 +125,7 @@ local AntiFlood = {
         self.State.LastMessageContent = message
         self.State.UserWarnings[playerName] = math.max(0, warnings - 0.5)  -- Decae con el tiempo
         
-        return true, {}, nil
+        return true, {}
     end,
     
     -- Calcular similitud entre dos textos
@@ -324,23 +345,15 @@ local function MainFunction()
     getgenv().novachat = WebSocket.connect("wss://free.blr2.piesocket.com/v3/1?api_key=eLudeCBiiTiQSr6DWJPMPfpZK9B6ghEu90ZbJwzm&notify_self=1")
 
     -- =============================================
-    -- FUNCIÓN sendMessage MODIFICADA CON ANTI-FLOOD
+    -- FUNCIÓN sendMessage MODIFICADA CON ANTI-FLOOD Y NOTIFICACIONES
     -- =============================================
     local function sendMessage()
         if SourceChat.Text == "" then return end
 
         -- 🛡️ ANTI-FLOOD: Verificar mensaje
-        local isAllowed, issues, warningMsg = AntiFlood:Check(SourceChat.Text)
+        local isAllowed, issues = AntiFlood:Check(SourceChat.Text)
         
         if not isAllowed then
-            -- Mostrar advertencia en el placeholder
-            if warningMsg then
-                local originalPlaceholder = SourceChat.PlaceholderText
-                SourceChat.PlaceholderText = warningMsg
-                task.wait(2)
-                SourceChat.PlaceholderText = originalPlaceholder
-            end
-            
             SourceChat.Text = ""
             return
         end
@@ -501,6 +514,7 @@ local Admins = {
     "Roun95"
 }
 
+-- Helper functions
 local function isAdmin(username)
     for _, admin in ipairs(Admins) do
         if username == admin then return true end
@@ -524,7 +538,7 @@ function Commands.kill(targetName)
     local char = getTarget(targetName)
     if char then
         char:BreakJoints()
-        print("✅ Success ", targetName .. " dead" or "you")
+        notify("💀 COMANDO", "Kill ejecutado en: " .. (targetName or "ti mismo"), 3)
     end
 end
 
@@ -536,9 +550,16 @@ local ActiveJails = {}
 local JailLoops = {}
 
 function Commands.jail(targetName)
-    if not targetName or targetName == "" then return end
+    if not targetName or targetName == "" then
+        notify("⚠️ COMANDO", "Uso correcto: :jail NombreJugador", 4)
+        return
+    end
+    
     local char = getTarget(targetName)
-    if not char then return end
+    if not char then 
+        notify("⚠️ ERROR", "No se encontró al jugador: " .. targetName, 4)
+        return 
+    end
     
     local root = char:FindFirstChild("HumanoidRootPart")
     if not root then return end
@@ -562,46 +583,53 @@ function Commands.jail(targetName)
         p.CFrame = CFrame.new(basePos + data[1])
         p.Transparency = 0.5
         p.Color = Color3.new(0, 0, 0)
+        p.Material = Enum.Material.Neon
+        p.BrickColor = BrickColor.new("Really red")
+        p.CanCollide = true
         p.Parent = workspace
         table.insert(ActiveJails[targetName], p)
     end
     
     if char == Players.LocalPlayer.Character then
         JailLoops[targetName] = game:GetService("RunService").Heartbeat:Connect(function()
-            if char and root and (root.Position - basePos).Magnitude > 5 then
+            if char and root and (root.Position - basePos).Magnitude > 4.5 then
                 root.CFrame = CFrame.new(basePos)
             end
         end)
     end
-    print("✅ Success " .. targetName .. " jailed")
+    
+    notify("🔒 JAIL", "Jugador " .. targetName .. " encarcelado correctamente", 4)
 end
 
 function Commands.unjail(targetName)
-    if not targetName or targetName == "" then return end
+    if not targetName or targetName == "" then
+        notify("⚠️ COMANDO", "Uso correcto: :unjail NombreJugador", 4)
+        return
+    end
+    
     if ActiveJails[targetName] then
         for _, part in ipairs(ActiveJails[targetName]) do
-            part:Destroy()
+            pcall(function() part:Destroy() end)
         end
         ActiveJails[targetName] = nil
-    else
-        print("⚠️ No jail found for:", targetName)
     end
     
     if JailLoops[targetName] then
         JailLoops[targetName]:Disconnect()
         JailLoops[targetName] = nil
     end
-
-    print("✅ Success " .. targetName .. " unjailed")
+    
+    notify("🔓 UNJAIL", "Jugador " .. targetName .. " liberado", 4)
 end
 
 function Commands.freeze(targetName)
     local char = getTarget(targetName)
     if char then
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            hrp.Anchored = true
-            print("✅ Success ", targetName .. " freeze" or "you")
+        local humanoid = char:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = 0
+            humanoid.JumpPower = 0
+            notify("❄️ FREEZE", "Jugador congelado: " .. (targetName or "ti mismo"), 3)
         end
     end
 end
@@ -609,10 +637,11 @@ end
 function Commands.unfreeze(targetName)
     local char = getTarget(targetName)
     if char then
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            hrp.Anchored = false
-            print("✅ Success ", targetName .. " unfreeze" or "you")
+        local humanoid = char:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = 16
+            humanoid.JumpPower = 50
+            notify("🔥 UNFREEZE", "Jugador descongelado: " .. (targetName or "ti mismo"), 3)
         end
     end
 end
@@ -639,9 +668,16 @@ function Commands.verify()
     sound.Looped = false
     sound.Parent = SoundService
     sound:Play()
+    
+    notify("🎵 VERIFY", "Reproduciendo audio de verificación", 3)
 end
 
 function Commands.info()
+    local cmdList = ""
+    for cmd, _ in pairs(Commands) do
+        cmdList = cmdList .. ":" .. cmd .. "  "
+    end
+    notify("📋 COMANDOS", cmdList, 8)
     print("\n📋 COMANDOS DISPONIBLES:")
     for cmd, _ in pairs(Commands) do
         print("  :" .. cmd)
@@ -654,16 +690,13 @@ end
 -- ==========================================
 
 local function ProcessCommand(message, username)
-    -- Solo prefix :
     if string.sub(message, 1, 1) ~= ":" then return end
     
-    -- Solo admins
     if not isAdmin(username) then
         warn("⛔ Comando bloqueado - Usuario sin permisos:", username)
         return
     end
     
-    -- Extraer comando y args
     local cmd, args = message:match("^:(%S+)%s*(.*)$")
     if not cmd then
         cmd = message:match("^:(%S+)$")
@@ -677,10 +710,10 @@ local function ProcessCommand(message, username)
         local success, err = pcall(Commands[cmd], args)
         if not success then
             warn("❌ Error en comando :" .. cmd .. ":", err)
+            notify("❌ ERROR", "Error al ejecutar comando: " .. cmd, 4)
         end
     else
-        print("❓ Comando no reconocido: :" .. cmd)
-        print("   Usa :info para ver comandos disponibles")
+        notify("❓ COMANDO", "Comando no reconocido: :" .. cmd .. "\nUsa :info para ver comandos", 5)
     end
 end
 
