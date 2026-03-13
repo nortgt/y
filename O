@@ -345,14 +345,14 @@ createParticleEmitter("White2", heartAtt, {
 })
 
 -- ============================================================================
--- 2. FLOOR (Efectos de suelo)
+-- 2. FLOOR (Efectos de suelo) - VERSIÓN COMPLETA
 -- ============================================================================
-print("📋 Creando efecto FLOOR...")
+print("📋 Creando efecto FLOOR (completo)...")
 
 local floorAtt = createAttachment("Floor", rootPart, Vector3.new(0, -2.9, 0))
 
--- Múltiples capas de efectos de suelo
-createParticleEmitter("BaseGlow", floorAtt, {
+-- Efecto 1 (brillante)
+createParticleEmitter("1", floorAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.497494, 0),
@@ -372,7 +372,117 @@ createParticleEmitter("BaseGlow", floorAtt, {
     ZOffset = 0.099
 })
 
-createParticleEmitter("RingEffect", floorAtt, {
+-- Efecto 1-1 (versión oscura)
+createParticleEmitter("1-1", floorAtt, {
+    Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.497494, 0),
+        NumberSequenceKeypoint.new(1, 1)
+    }),
+    Brightness = 0.16,
+    Color = ColorSequence.new(Color3.new(1, 1, 1)),
+    Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0),
+        NumberSequenceKeypoint.new(1, 25.9374)
+    }),
+    Lifetime = NumberRange.new(1, 1),
+    Rate = 20,
+    Speed = NumberRange.new(0.001, 0.001),
+    LockedToPart = true,
+    LightEmission = -2.5,
+    Texture = "rbxassetid://95823798222583",
+    ZOffset = 0.1
+})
+
+-- Efecto 2
+createParticleEmitter("2", floorAtt, {
+    Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.497494, 0),
+        NumberSequenceKeypoint.new(1, 1)
+    }),
+    Brightness = 0.16,
+    Color = ColorSequence.new(Color3.new(1, 1, 1)),
+    Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0),
+        NumberSequenceKeypoint.new(1, 31.3843)
+    }),
+    Lifetime = NumberRange.new(1, 1),
+    Rate = 20,
+    Speed = NumberRange.new(0.001, 0.001),
+    LockedToPart = true,
+    LightEmission = -1.5,
+    Texture = "rbxassetid://103343531376733",
+    ZOffset = 0.01
+})
+
+-- Efecto 4
+createParticleEmitter("4", floorAtt, {
+    Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.507519, 0),
+        NumberSequenceKeypoint.new(1, 1)
+    }),
+    Brightness = 0.16,
+    Color = ColorSequence.new(Color3.new(1, 1, 1)),
+    Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0),
+        NumberSequenceKeypoint.new(1, 37.975)
+    }),
+    Lifetime = NumberRange.new(1, 1),
+    Rate = 50,
+    Speed = NumberRange.new(0.001, 0.001),
+    LockedToPart = true,
+    LightEmission = -3,
+    Texture = "rbxassetid://83284473251919",
+    ZOffset = 0
+})
+
+-- Efecto 5
+createParticleEmitter("5", floorAtt, {
+    Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.507519, 0),
+        NumberSequenceKeypoint.new(1, 1)
+    }),
+    Brightness = 0.371,
+    Color = ColorSequence.new(Color3.new(1, 1, 1)),
+    Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0),
+        NumberSequenceKeypoint.new(1, 34.5227)
+    }),
+    Lifetime = NumberRange.new(1, 1),
+    Rate = 50,
+    Speed = NumberRange.new(0.001, 0.001),
+    LockedToPart = true,
+    Texture = "rbxassetid://11866455263",
+    ZOffset = 0.002
+})
+
+-- Efecto 2-1 (versión brillante del 2)
+createParticleEmitter("2-1", floorAtt, {
+    Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.497494, 0),
+        NumberSequenceKeypoint.new(1, 1)
+    }),
+    Brightness = 1.121,
+    Color = ColorSequence.new(Color3.new(1, 1, 1)),
+    Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0),
+        NumberSequenceKeypoint.new(1, 31.3843)
+    }),
+    Lifetime = NumberRange.new(1, 1),
+    Rate = 20,
+    Speed = NumberRange.new(0.001, 0.001),
+    LockedToPart = true,
+    LightEmission = 1,
+    Texture = "rbxassetid://103343531376733",
+    ZOffset = 0.011
+})
+
+-- Efecto 6 (anillo)
+createParticleEmitter("6", floorAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.497494, 0),
@@ -390,7 +500,8 @@ createParticleEmitter("RingEffect", floorAtt, {
     ZOffset = 0.101
 })
 
-createParticleEmitter("Sparkles", floorAtt, {
+-- Efecto 6-1 (anillo más grande)
+createParticleEmitter("6-1", floorAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.497494, 0),
@@ -409,7 +520,8 @@ createParticleEmitter("Sparkles", floorAtt, {
     TimeScale = 0.5
 })
 
-createParticleEmitter("EnergyWave", floorAtt, {
+-- Efecto 7 (onda de energía)
+createParticleEmitter("7", floorAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.10401, 0),
@@ -434,9 +546,9 @@ createParticleEmitter("EnergyWave", floorAtt, {
 })
 
 -- ============================================================================
--- 3. FOGDEBRIS (Niebla y partículas flotantes)
+-- 3. FOGDEBRIS (Niebla y partículas flotantes) - VERSIÓN COMPLETA
 -- ============================================================================
-print("📋 Creando efecto FOGDEBRIS...")
+print("📋 Creando efecto FOGDEBRIS (completo)...")
 
 local fogDebris = createInvisiblePart("Fogdebris", Vector3.new(40, 0.5, 40), rootPart.CFrame * CFrame.new(0, -5, 0))
 
@@ -477,7 +589,7 @@ createParticleEmitter("Help", fogDebris, {
     ZOffset = 0.5
 })
 
--- Capas de niebla
+-- Capas de niebla (2 versiones)
 createParticleEmitter("Fog1", fogDebris, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
@@ -518,8 +630,8 @@ createParticleEmitter("Fog2", fogDebris, {
     ZOffset = -1.1
 })
 
--- Partículas de escombros
-createParticleEmitter("Debris", fogDebris, {
+-- Efecto Debris3
+createParticleEmitter("Debris3", fogDebris, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.177374, 0),
@@ -540,6 +652,91 @@ createParticleEmitter("Debris", fogDebris, {
     ZOffset = 0.5
 })
 
+-- Efecto Debris2
+createParticleEmitter("Debris2", fogDebris, {
+    Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.177374, 0),
+        NumberSequenceKeypoint.new(1, 1)
+    }),
+    Brightness = 10.121,
+    Color = ColorSequence.new(Color3.new(1, 1, 1)),
+    Size = NumberSequence.new(0.25),
+    Lifetime = NumberRange.new(3, 3),
+    Rate = 10,
+    Speed = NumberRange.new(10, 10),
+    LockedToPart = false,
+    Texture = "rbxassetid://121116689038631",
+    ZOffset = 0.5
+})
+
+-- Efecto Debris1
+createParticleEmitter("Debris1", fogDebris, {
+    Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.5, 0),
+        NumberSequenceKeypoint.new(1, 1)
+    }),
+    Brightness = 20.121,
+    Color = ColorSequence.new(Color3.new(1, 1, 1)),
+    Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(1, 2e-05)
+    }),
+    Lifetime = NumberRange.new(2, 2),
+    Rate = 10,
+    Speed = NumberRange.new(10, 10),
+    LockedToPart = false,
+    LightEmission = 1,
+    Texture = "https://assetgame.roblox.com/asset/?id=12363816...", -- ID incompleto
+    ZOffset = 0.5
+})
+
+-- Efecto 1
+createParticleEmitter("1", fogDebris, {
+    Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.10401, 0),
+        NumberSequenceKeypoint.new(0.497494, 0),
+        NumberSequenceKeypoint.new(1, 1)
+    }),
+    Brightness = 5.121,
+    Color = ColorSequence.new(Color3.new(1, 1, 1)),
+    Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 6.6875),
+        NumberSequenceKeypoint.new(1, 6.125)
+    }),
+    Lifetime = NumberRange.new(2, 2),
+    Rate = 10,
+    Speed = NumberRange.new(20, 20),
+    LockedToPart = false,
+    LightEmission = 1,
+    Texture = "rbxassetid://125036749142348",
+    ZOffset = 0.099
+})
+
+-- Efecto 2
+createParticleEmitter("2", fogDebris, {
+    Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.497494, 0),
+        NumberSequenceKeypoint.new(1, 1)
+    }),
+    Brightness = 5.121,
+    Color = ColorSequence.new(Color3.new(1, 1, 1)),
+    Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0),
+        NumberSequenceKeypoint.new(0.402228, 7.375),
+        NumberSequenceKeypoint.new(1, 2.4375)
+    }),
+    Lifetime = NumberRange.new(1, 1),
+    Rate = 10,
+    Speed = NumberRange.new(0.001, 0.001),
+    LockedToPart = true,
+    LightEmission = 1,
+    Texture = "rbxassetid://16515551397",
+    ZOffset = -1
+})
 -- ============================================================================
 -- 4. OPPRESSION (Estructura compleja de energía) - CON TODOS LOS EFECTOS
 -- ============================================================================
