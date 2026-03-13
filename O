@@ -1,7 +1,6 @@
 --[[
-    SCRIPT CONSTRUCTOR: MODELO "WIKIDUMMY" (VERSIÓN COMPLETA CON GUI)
-    Basado en el archivo: Modelo_Workspace_WikiDummy_filtrado_completo_20260313_144035.txt
-    Recrea todos los efectos, GUI y sonido en un personaje R6.
+    SCRIPT CONSTRUCTOR: WIKIDUMMY (VERSIÓN LIGERA)
+    Solo incluye: Heart, Floor, Fogdebris y Oppression
 --]]
 
 local Players = game:GetService("Players")
@@ -9,19 +8,14 @@ local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 task.wait(0.5)
 
-print("🌟 Construyendo modelo WIKIDUMMY (versión completa) para:", character.Name)
+print("🌟 Construyendo WikiDummy (versión ligera) para:", character.Name)
 
 -- Referencias a las partes del personaje R6
-local head = character:FindFirstChild("Head")
 local torso = character:FindFirstChild("Torso")
-local leftArm = character:FindFirstChild("Left Arm")
-local rightArm = character:FindFirstChild("Right Arm")
-local leftLeg = character:FindFirstChild("Left Leg")
-local rightLeg = character:FindFirstChild("Right Leg")
 local rootPart = character:FindFirstChild("HumanoidRootPart")
 
-if not head or not torso or not leftArm or not rightArm or not leftLeg or not rightLeg or not rootPart then
-    warn("❌ Personaje no es R6 o faltan partes. Asegúrate de usar un personaje R6.")
+if not torso or not rootPart then
+    warn("❌ No se encontraron Torso o HumanoidRootPart")
     return
 end
 
@@ -57,9 +51,6 @@ local function createParticleEmitter(name, parent, data)
     if data.Texture then pe.Texture = data.Texture end
     if data.ZOffset then pe.ZOffset = data.ZOffset end
     if data.TimeScale then pe.TimeScale = data.TimeScale end
-    if data.Rotation then pe.Rotation = data.Rotation end
-    if data.VelocityInheritance then pe.VelocityInheritance = data.VelocityInheritance end
-    if data.VelocitySpread then pe.VelocitySpread = data.VelocitySpread end
     
     return pe
 end
@@ -84,770 +75,227 @@ local function createBeam(name, attachment0, attachment1, data)
     return beam
 end
 
-local function createFrame(name, parent, size, position, color, transparency)
-    local frame = Instance.new("Frame")
-    frame.Name = name
-    frame.Parent = parent
-    frame.Size = size or UDim2.new(0, 0, 0, 0)
-    frame.Position = position or UDim2.new(0, 0, 0, 0)
-    frame.BackgroundColor3 = color or Color3.new(1, 1, 1)
-    frame.BackgroundTransparency = transparency or 0
-    frame.BorderSizePixel = 0
-    frame.Visible = true
-    frame.Active = false
-    frame.ClipsDescendants = false
-    frame.Draggable = false
-    frame.Selectable = false
-    return frame
+local function createInvisiblePart(name, size, cframe)
+    local part = Instance.new("Part")
+    part.Name = name
+    part.Parent = character
+    part.Size = size
+    part.CFrame = cframe
+    part.Transparency = 1
+    part.Anchored = true
+    part.CanCollide = false
+    part.Massless = true
+    return part
 end
 
 -- ============================================================================
--- 1. EFECTOS EN BRAZOS Y PIERNAS (patrón común)
+-- 1. HEART (Efecto de corazón en el torso)
 -- ============================================================================
-print("📋 Creando efectos en extremidades...")
+print("📋 Creando efecto HEART...")
 
-local function setupLimb(part, isLeftLeg, isRightLeg)
-    if not part then return end
-    local att
-    if isLeftLeg then
-        -- Left Leg: Rotation 0,0,90
-        att = createAttachment("1", part, Vector3.new(0, -1, 0), Vector3.new(0, 1, 0), Vector3.new(-1, 0, 0))
-    elseif isRightLeg then
-        -- Right Leg: Rotation -0,-0,-90
-        att = createAttachment("1", part, Vector3.new(0, -1, 0), Vector3.new(0, -1, 0), Vector3.new(1, 0, 0))
-    else
-        -- Arms: default
-        att = createAttachment("1", part, Vector3.new(0, -1, 0))
-    end
+local heartAtt = createAttachment("Heart", torso, Vector3.new(0, 0.25, -1.424), Vector3.new(0, -1, 0), Vector3.new(1, 0, 0))
 
-    -- Beam 1
-    createBeam("1", att, att, {
-        Transparency = NumberSequence.new({
-            NumberSequenceKeypoint.new(0, 0),
-            NumberSequenceKeypoint.new(0.5, 0),
-            NumberSequenceKeypoint.new(1, 1)
-        }),
-        Brightness = 2.23,
-        Color = ColorSequence.new(Color3.new(1, 1, 1)),
-        LightEmission = 1,
-        Texture = "rbxassetid://12781812529",
-        FaceCamera = true,
-        ZOffset = 0.1
-    })
-
-    -- ParticleEmitter 1
-    createParticleEmitter("1", att, {
-        Transparency = NumberSequence.new({
-            NumberSequenceKeypoint.new(0, 1),
-            NumberSequenceKeypoint.new(0.497494, 0),
-            NumberSequenceKeypoint.new(1, 1)
-        }),
-        Brightness = 0.23,
-        Color = ColorSequence.new(Color3.new(1, 1, 1)),
-        Size = NumberSequence.new(0.6),
-        Lifetime = NumberRange.new(0.1, 0.1),
-        Rate = 30,
-        Speed = NumberRange.new(0.5, 0.5),
-        LockedToPart = true,
-        LightEmission = -1,
-        Texture = "rbxassetid://76354913145589",
-        ZOffset = 2
-    })
-
-    -- Beam 3
-    createBeam("3", att, att, {
-        Transparency = NumberSequence.new({
-            NumberSequenceKeypoint.new(0, 1),
-            NumberSequenceKeypoint.new(0.0238095, 0),
-            NumberSequenceKeypoint.new(0.5, 0),
-            NumberSequenceKeypoint.new(0.898496, 0),
-            NumberSequenceKeypoint.new(1, 1)
-        }),
-        Brightness = 0.23,
-        Color = ColorSequence.new(Color3.new(1, 1, 1)),
-        LightEmission = 0,
-        Texture = "rbxassetid://122462811768793",
-        FaceCamera = true,
-        ZOffset = 0.099
-    })
-
-    -- ParticleEmitter 2-1
-    createParticleEmitter("2-1", att, {
-        Transparency = NumberSequence.new({
-            NumberSequenceKeypoint.new(0, 1),
-            NumberSequenceKeypoint.new(0.497494, 0),
-            NumberSequenceKeypoint.new(1, 1)
-        }),
-        Brightness = 1.23,
-        Color = ColorSequence.new(Color3.new(1, 1, 1)),
-        Size = NumberSequence.new(0.4),
-        Lifetime = NumberRange.new(0.1, 0.1),
-        Rate = 30,
-        Speed = NumberRange.new(0.5, 0.5),
-        LockedToPart = true,
-        LightEmission = 1,
-        Texture = "rbxassetid://76354913145589",
-        ZOffset = 2.1
-    })
-
-    -- ParticleEmitter 2
-    createParticleEmitter("2", att, {
-        Transparency = NumberSequence.new({
-            NumberSequenceKeypoint.new(0, 1),
-            NumberSequenceKeypoint.new(0.497494, 0),
-            NumberSequenceKeypoint.new(1, 1)
-        }),
-        Brightness = 1.23,
-        Color = ColorSequence.new(Color3.new(1, 1, 1)),
-        Size = NumberSequence.new(0.4),
-        Lifetime = NumberRange.new(0.1, 0.1),
-        Rate = 30,
-        Speed = NumberRange.new(0.5, 0.5),
-        LockedToPart = true,
-        LightEmission = 1,
-        Texture = "rbxassetid://76354913145589",
-        ZOffset = 2.1
-    })
-
-    -- Beam 2
-    createBeam("2", att, att, {
-        Transparency = NumberSequence.new({
-            NumberSequenceKeypoint.new(0, 0),
-            NumberSequenceKeypoint.new(0.5, 0),
-            NumberSequenceKeypoint.new(1, 1)
-        }),
-        Brightness = 5.23,
-        Color = ColorSequence.new(Color3.new(1, 1, 1)),
-        LightEmission = 1,
-        Texture = "rbxassetid://12191903502",
-        FaceCamera = true,
-        ZOffset = 0.1
-    })
-end
-
-setupLimb(leftArm)
-setupLimb(rightArm)
-setupLimb(leftLeg, true, false)  -- leftLeg
-setupLimb(rightLeg, false, true) -- rightLeg
-
--- ============================================================================
--- 2. EFECTOS EN CABEZA
--- ============================================================================
-print("📋 Creando efectos en Head...")
-
--- Attachment "Face"
-local faceAtt = createAttachment("Face", head, Vector3.new(0, 0, 0))
-
--- ParticleEmitter 1 en Face
-createParticleEmitter("1", faceAtt, {
+-- Estrellas base
+createParticleEmitter("star 0.2", heartAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.497494, 0),
+        NumberSequenceKeypoint.new(0.502475, 0),
         NumberSequenceKeypoint.new(1, 1)
     }),
-    Brightness = 1.121,
+    Brightness = 0.23,
     Color = ColorSequence.new(Color3.new(1, 1, 1)),
     Size = NumberSequence.new(1),
-    Lifetime = NumberRange.new(0.1, 0.1),
-    Rate = 13,
-    Speed = NumberRange.new(0.5, 0.5),
+    Lifetime = NumberRange.new(3, 3),
+    Rate = 2,
+    Speed = NumberRange.new(0.001, 0.001),
     LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://97016987161906",
-    ZOffset = 2
-})
-
--- ParticleEmitter 3 en Face
-createParticleEmitter("3", faceAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.497494, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.16,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.729),
-        NumberSequenceKeypoint.new(1, 0.9477)
-    }),
-    Lifetime = NumberRange.new(0.5, 0.5),
-    Rate = 40,
-    Speed = NumberRange.new(0.5, 0.5),
-    LockedToPart = true,
-    LightEmission = 0,
-    Texture = "rbxassetid://103840000683513",
-    ZOffset = 1.998
-})
-
--- ParticleEmitter 2 en Face
-createParticleEmitter("2", faceAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.497494, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(0.9477),
-    Lifetime = NumberRange.new(0.5, 0.5),
-    Rate = 7,
-    Speed = NumberRange.new(0.5, 0.5),
-    LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://103840000683513",
-    ZOffset = 1.999
-})
-
--- Attachment "1" en Head (posición 0, 0.5, 0.5)
-local headAtt2 = createAttachment("1", head, Vector3.new(0, 0.5, 0.5))
-
--- Beam 1
-createBeam("1", headAtt2, headAtt2, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(0.5, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 2.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 1,
-    Texture = "rbxassetid://12781812529",
-    FaceCamera = true,
-    ZOffset = 0.1
-})
-
--- ParticleEmitter 1
-createParticleEmitter("1", headAtt2, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.497494, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.16,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(0.6),
-    Lifetime = NumberRange.new(0.1, 0.1),
-    Rate = 30,
-    Speed = NumberRange.new(0.5, 0.5),
-    LockedToPart = true,
-    LightEmission = -1,
-    Texture = "rbxassetid://76354913145589",
-    ZOffset = 2
-})
-
--- Beam 3
-createBeam("3", headAtt2, headAtt2, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.0238095, 0),
-        NumberSequenceKeypoint.new(0.5, 0),
-        NumberSequenceKeypoint.new(0.898496, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.16,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 0,
-    Texture = "rbxassetid://122462811768793",
-    FaceCamera = true,
+    Texture = "rbxassetid://116466225513361",
     ZOffset = 0.099
 })
 
--- ParticleEmitter 2
-createParticleEmitter("2", headAtt2, {
+-- Anillos pulsantes (2 versiones)
+createParticleEmitter("Ring1", heartAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.497494, 0),
+        NumberSequenceKeypoint.new(0.502475, 0),
         NumberSequenceKeypoint.new(1, 1)
     }),
-    Brightness = 1.121,
+    Brightness = 0.23,
     Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(0.4),
-    Lifetime = NumberRange.new(0.1, 0.1),
-    Rate = 30,
-    Speed = NumberRange.new(0.5, 0.5),
+    Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0.902138),
+        NumberSequenceKeypoint.new(1, 0)
+    }),
+    Lifetime = NumberRange.new(0.8, 0.8),
+    Rate = 50,
+    Speed = NumberRange.new(0.001, 0.001),
     LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://76354913145589",
-    ZOffset = 2.1
+    Texture = "http://www.roblox.com/asset/?id=72797430716532",
+    ZOffset = 0.097
 })
 
--- ParticleEmitter 2-1
-createParticleEmitter("2-1", headAtt2, {
+createParticleEmitter("Ring2", heartAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.497494, 0),
+        NumberSequenceKeypoint.new(0.502475, 0),
         NumberSequenceKeypoint.new(1, 1)
     }),
-    Brightness = 1.121,
+    Brightness = 0.23,
     Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(0.4),
-    Lifetime = NumberRange.new(0.1, 0.1),
-    Rate = 30,
-    Speed = NumberRange.new(0.5, 0.5),
+    Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0.902138),
+        NumberSequenceKeypoint.new(1, 0)
+    }),
+    Lifetime = NumberRange.new(0.8, 0.8),
+    Rate = 15,
+    Speed = NumberRange.new(0.001, 0.001),
     LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://76354913145589",
-    ZOffset = 2.1
+    Texture = "http://www.roblox.com/asset/?id=72797430716532",
+    ZOffset = 0.098
 })
 
--- Beam 2
-createBeam("2", headAtt2, headAtt2, {
+-- Corazones izquierdo y derecho
+local heartInner1 = createAttachment("HeartRightAtt", heartAtt, Vector3.new(0, -0.086, 0))
+createParticleEmitter("Heart(Right)", heartInner1, {
     Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(0.5, 0),
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.502475, 0),
         NumberSequenceKeypoint.new(1, 1)
     }),
-    Brightness = 5.121,
+    Brightness = 1.23,
     Color = ColorSequence.new(Color3.new(1, 1, 1)),
+    Size = NumberSequence.new(1),
+    Lifetime = NumberRange.new(0.6, 0.6),
+    Rate = 15,
+    Speed = NumberRange.new(0.001, 0.001),
+    LockedToPart = true,
+    Texture = "http://www.roblox.com/asset/?id=17278805871",
+    ZOffset = 0.2
+})
+
+local heartInner2 = createAttachment("HeartLeftAtt", heartAtt, Vector3.new(0, 0.054, 0))
+createParticleEmitter("Heart(Left)", heartInner2, {
+    Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.502475, 0),
+        NumberSequenceKeypoint.new(1, 1)
+    }),
+    Brightness = 1.23,
+    Color = ColorSequence.new(Color3.new(1, 1, 1)),
+    Size = NumberSequence.new(1),
+    Lifetime = NumberRange.new(0.6, 0.6),
+    Rate = 15,
+    Speed = NumberRange.new(0.001, 0.001),
+    LockedToPart = true,
+    Texture = "http://www.roblox.com/asset/?id=17278805287",
+    ZOffset = 0.2
+})
+
+-- Estrellas de diferentes tamaños
+createParticleEmitter("star -5", heartAtt, {
+    Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.502475, 0),
+        NumberSequenceKeypoint.new(1, 1)
+    }),
+    Brightness = 1.23,
+    Color = ColorSequence.new(Color3.new(1, 1, 1)),
+    Size = NumberSequence.new(0.6),
+    Lifetime = NumberRange.new(3, 3),
+    Rate = 2,
+    Speed = NumberRange.new(0.001, 0.001),
+    LockedToPart = true,
     LightEmission = 1,
-    Texture = "rbxassetid://12191903502",
-    FaceCamera = true,
+    Texture = "rbxassetid://116466225513361",
     ZOffset = 0.1
 })
 
--- ============================================================================
--- 3. BILLBOARDGUI EN CABEZA (TitleUI) - VERSIÓN COMPLETA CON FRAMES
--- ============================================================================
-print("📋 Creando BillboardGui TitleUI...")
-
-local billboard = Instance.new("BillboardGui")
-billboard.Name = "TitleUI"
-billboard.Parent = head
-billboard.Enabled = true
-billboard.Size = UDim2.new(13.5001192, 0, 3.60003161, 0)
-billboard.StudsOffset = Vector3.new(0, 0, 0)
-billboard.AlwaysOnTop = false
-billboard.Active = true
-billboard.ClipsDescendants = false
-billboard.ZIndexBehavior = Enum.ZIndexBehavior.Global
-billboard.LightInfluence = 0
-billboard.MaxDistance = math.huge
-
--- Title TextLabel
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Name = "Title"
-titleLabel.Parent = billboard
-titleLabel.Size = UDim2.new(1, 0, 0.699999988, 0)
-titleLabel.Position = UDim2.new(0.5, 0, 0.400000006, 0)
-titleLabel.BackgroundColor3 = Color3.new(1, 1, 1)
-titleLabel.BackgroundTransparency = 1
-titleLabel.BorderSizePixel = 0
-titleLabel.Text = "[ o p p r e s s i o n ]"
-titleLabel.TextColor3 = Color3.new(1, 1, 1)
-titleLabel.TextSize = 14
-titleLabel.TextScaled = true
-titleLabel.TextWrapped = true
-titleLabel.Font = Enum.Font.Unknown
-titleLabel.Visible = true
-titleLabel.Active = false
-
--- Rarity TextLabel
-local rarityLabel = Instance.new("TextLabel")
-rarityLabel.Name = "Rarity"
-rarityLabel.Parent = billboard
-rarityLabel.Size = UDim2.new(1, 0, 0.300000012, 0)
-rarityLabel.Position = UDim2.new(0.5, 0, 0.649999976, 0)
-rarityLabel.BackgroundColor3 = Color3.new(1, 1, 1)
-rarityLabel.BackgroundTransparency = 1
-rarityLabel.BorderSizePixel = 0
-rarityLabel.Text = "[ 1 in 1,000,000,000 ]"
-rarityLabel.TextColor3 = Color3.new(1, 1, 1)
-rarityLabel.TextSize = 14
-rarityLabel.TextScaled = true
-rarityLabel.TextWrapped = true
-rarityLabel.Font = Enum.Font.Unknown
-rarityLabel.Visible = true
-rarityLabel.Active = false
-
--- Frame principal
-local mainFrame = createFrame("Frame", billboard, UDim2.new(1, 0, 0.699999988, 0), UDim2.new(0.5, 0, 0.5, 0), Color3.new(0, 0, 0), 0.5)
-
--- SelectionCorners Folder
-local cornersFolder = Instance.new("Folder")
-cornersFolder.Name = "SelectionCorners"
-cornersFolder.Parent = mainFrame
-
--- Función para crear las esquinas
-local function createCornerSet(name, position)
-    local cornerFrame = createFrame(name, cornersFolder, UDim2.new(0.1, 0, 0.1, 0), position, Color3.new(1, 1, 1), 1)
-    
-    local corner1 = createFrame("Corner1", cornerFrame, UDim2.new(1, 0, 0.3, 0), UDim2.new(0, 0, 0, 0), Color3.new(1, 1, 1), 0)
-    local corner2 = createFrame("Corner2", cornerFrame, UDim2.new(0.3, 0, 1, 0), UDim2.new(0, 0, 0, 0), Color3.new(1, 1, 1), 0)
-end
-
-createCornerSet("LeftUp", UDim2.new(0, 0, 0, 0))
-createCornerSet("LeftDown", UDim2.new(0, 0, 1, 0))
-createCornerSet("RightUp", UDim2.new(1, 0, 0, 0))
-createCornerSet("RightDown", UDim2.new(1, 0, 1, 0))
-
--- Ajustes específicos para las esquinas según el archivo (posiciones relativas dentro del cornerFrame)
--- Nota: En el archivo, algunos Corner1 y Corner2 tienen posiciones diferentes. Vamos a ajustarlas.
--- Como ya creamos los frames, podemos modificar las posiciones de los corners después.
-
--- LeftUp: Corner1 en (0,0), Corner2 en (0,0) - ya está bien
--- LeftDown: Corner1 en (0,0.7), Corner2 en (0,0)
-local leftDown = cornersFolder:FindFirstChild("LeftDown")
-if leftDown then
-    local c1 = leftDown:FindFirstChild("Corner1")
-    local c2 = leftDown:FindFirstChild("Corner2")
-    if c1 then c1.Position = UDim2.new(0, 0, 0.7, 0) end
-    if c2 then c2.Position = UDim2.new(0, 0, 0, 0) end
-end
-
--- RightUp: Corner1 en (0,0), Corner2 en (0.7,0)
-local rightUp = cornersFolder:FindFirstChild("RightUp")
-if rightUp then
-    local c1 = rightUp:FindFirstChild("Corner1")
-    local c2 = rightUp:FindFirstChild("Corner2")
-    if c1 then c1.Position = UDim2.new(0, 0, 0, 0) end
-    if c2 then c2.Position = UDim2.new(0.7, 0, 0, 0) end
-end
-
--- RightDown: Corner1 en (0,0.7), Corner2 en (0.7,0)
-local rightDown = cornersFolder:FindFirstChild("RightDown")
-if rightDown then
-    local c1 = rightDown:FindFirstChild("Corner1")
-    local c2 = rightDown:FindFirstChild("Corner2")
-    if c1 then c1.Position = UDim2.new(0, 0, 0.7, 0) end
-    if c2 then c2.Position = UDim2.new(0.7, 0, 0, 0) end
-end
-
--- ============================================================================
--- 4. EFECTOS EN HUMANODROOTPART (RAÍZ)
--- ============================================================================
-print("📋 Creando efectos en HumanoidRootPart...")
-
--- Attachment principal en rootPart (posición 0,1,0)
-local rootAtt = createAttachment("Attachment", rootPart, Vector3.new(0, 1, 0))
-
--- Beams 1 y 2 en rootAtt
-createBeam("1", rootAtt, rootAtt, {
+createParticleEmitter("star -2", heartAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.0940594, 0),
-        NumberSequenceKeypoint.new(0.499379, 0),
-        NumberSequenceKeypoint.new(0.894802, 0),
+        NumberSequenceKeypoint.new(0.502475, 0),
         NumberSequenceKeypoint.new(1, 1)
     }),
-    Brightness = 1.346,
+    Brightness = 0.23,
     Color = ColorSequence.new(Color3.new(1, 1, 1)),
+    Size = NumberSequence.new(1),
+    Lifetime = NumberRange.new(3, 3),
+    Rate = 2,
+    Speed = NumberRange.new(0.001, 0.001),
+    LockedToPart = true,
+    Texture = "rbxassetid://116466225513361",
+    ZOffset = 0.099
+})
+
+createParticleEmitter("star 0.5", heartAtt, {
+    Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.502475, 0),
+        NumberSequenceKeypoint.new(1, 1)
+    }),
+    Brightness = 1.23,
+    Color = ColorSequence.new(Color3.new(1, 1, 1)),
+    Size = NumberSequence.new(0.5),
+    Lifetime = NumberRange.new(3, 3),
+    Rate = 2,
+    Speed = NumberRange.new(0.001, 0.001),
+    LockedToPart = true,
     LightEmission = 1,
-    Texture = "rbxassetid://12781812529",
-    FaceCamera = false,
-    ZOffset = 0
+    Texture = "rbxassetid://116466225513361",
+    ZOffset = 0.1
 })
 
-createBeam("2", rootAtt, rootAtt, {
+-- Partículas blancas y negras
+createParticleEmitter("Black", heartAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.0940594, 0),
-        NumberSequenceKeypoint.new(0.499379, 0),
-        NumberSequenceKeypoint.new(0.894802, 0),
+        NumberSequenceKeypoint.new(0.502475, 0),
         NumberSequenceKeypoint.new(1, 1)
     }),
-    Brightness = 1.346,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 1,
-    Texture = "rbxassetid://12191903502",
-    FaceCamera = false,
-    ZOffset = 0
-})
-
--- Sub-attachment con rotación
-local subAtt1 = createAttachment("Attachment", rootAtt, Vector3.new(0, 0, 0))
-subAtt1.Rotation = Vector3.new(0, 0, 5.001879692077637)  -- Aproximado, usamos Euler
-
--- Beams en subAtt1
-createBeam("2", subAtt1, subAtt1, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.0940594, 0),
-        NumberSequenceKeypoint.new(0.499379, 0),
-        NumberSequenceKeypoint.new(0.894802, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.346,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 1,
-    Texture = "rbxassetid://12191903502",
-    FaceCamera = false,
-    ZOffset = 0
-})
-
-createBeam("1", subAtt1, subAtt1, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.0940594, 0),
-        NumberSequenceKeypoint.new(0.499379, 0),
-        NumberSequenceKeypoint.new(0.894802, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.346,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 1,
-    Texture = "rbxassetid://12781812529",
-    FaceCamera = false,
-    ZOffset = 0
-})
-
-createBeam("3", subAtt1, subAtt1, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.0941, 0.5),
-        NumberSequenceKeypoint.new(0.499, 0.5),
-        NumberSequenceKeypoint.new(0.895, 0.5),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.346,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 0,
-    Texture = "rbxassetid://122462811768793",
-    FaceCamera = false,
-    ZOffset = 0.001
-})
-
--- Segundo sub-attachment con rotación diferente
-local subAtt2 = createAttachment("Attachment", rootAtt, Vector3.new(0, 0, 0.000244140625))
-subAtt2.Rotation = Vector3.new(-180, 0, -174.9981231689453)  -- Aproximado
-
--- Beams en subAtt2
-createBeam("1", subAtt2, subAtt2, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.0940594, 0),
-        NumberSequenceKeypoint.new(0.499379, 0),
-        NumberSequenceKeypoint.new(0.894802, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.346,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 1,
-    Texture = "rbxassetid://12781812529",
-    FaceCamera = false,
-    ZOffset = 0
-})
-
-createBeam("2", subAtt2, subAtt2, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.0940594, 0),
-        NumberSequenceKeypoint.new(0.499379, 0),
-        NumberSequenceKeypoint.new(0.894802, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.346,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 1,
-    Texture = "rbxassetid://12191903502",
-    FaceCamera = false,
-    ZOffset = 0
-})
-
--- Sub-sub-attachment dentro de subAtt2
-local subSubAtt = createAttachment("Attachment", subAtt2, Vector3.new(0, 0, 0))
-subSubAtt.Rotation = Vector3.new(0, 0, -9.99842643737793)  -- Aproximado
-
--- Attachments dentro de subSubAtt
-local subSubAtt1 = createAttachment("1", subSubAtt, Vector3.new(0, 0, -20))
--- ParticleEmitters en subSubAtt1
-createParticleEmitter("1", subSubAtt1, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.496241, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.346,
+    Brightness = 0.23,
     Color = ColorSequence.new(Color3.new(1, 1, 1)),
     Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.8125),
-        NumberSequenceKeypoint.new(1, 4.4375)
+        NumberSequenceKeypoint.new(0, 0.478297),
+        NumberSequenceKeypoint.new(1, 1.19574)
     }),
-    Lifetime = NumberRange.new(0.1, 0.1),
-    Rate = 30,
-    Speed = NumberRange.new(2, 2),
+    Lifetime = NumberRange.new(0.5, 0.5),
+    Rate = 60,
+    Speed = NumberRange.new(0.001, 0.001),
     LockedToPart = true,
-    Texture = "rbxassetid://116466225513361",
-    ZOffset = 1
+    Texture = "rbxassetid://11866455263",
+    ZOffset = 0.01
 })
 
-createParticleEmitter("2", subSubAtt1, {
+createParticleEmitter("White", heartAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.496241, 0),
+        NumberSequenceKeypoint.new(0.502475, 0),
         NumberSequenceKeypoint.new(1, 1)
     }),
-    Brightness = 1.346,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(2),
-    Lifetime = NumberRange.new(0.1, 0.1),
-    Rate = 30,
-    Speed = NumberRange.new(2, 2),
-    LockedToPart = true,
-    Texture = "rbxassetid://116466225513361",
-    ZOffset = 1.1
-})
-
-createParticleEmitter("2-1", subSubAtt1, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.496241, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.346,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(2),
-    Lifetime = NumberRange.new(0.1, 0.1),
-    Rate = 30,
-    Speed = NumberRange.new(2, 2),
-    LockedToPart = true,
-    Texture = "rbxassetid://116466225513361",
-    ZOffset = 1.1
-})
-
-local subSubAtt2 = createAttachment("2", subSubAtt, Vector3.new(0, 0, 20))
--- ParticleEmitters en subSubAtt2 (igual que subSubAtt1)
-createParticleEmitter("1", subSubAtt2, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.496241, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.346,
+    Brightness = 5.23,
     Color = ColorSequence.new(Color3.new(1, 1, 1)),
     Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.8125),
-        NumberSequenceKeypoint.new(1, 4.4375)
+        NumberSequenceKeypoint.new(0, 0.430467),
+        NumberSequenceKeypoint.new(1, 1.07617)
     }),
-    Lifetime = NumberRange.new(0.1, 0.1),
+    Lifetime = NumberRange.new(0.7, 0.7),
     Rate = 30,
-    Speed = NumberRange.new(2, 2),
+    Speed = NumberRange.new(0.001, 0.001),
     LockedToPart = true,
-    Texture = "rbxassetid://116466225513361",
-    ZOffset = 1
-})
-
-createParticleEmitter("2", subSubAtt2, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.496241, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.346,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(2),
-    Lifetime = NumberRange.new(0.1, 0.1),
-    Rate = 30,
-    Speed = NumberRange.new(2, 2),
-    LockedToPart = true,
-    Texture = "rbxassetid://116466225513361",
-    ZOffset = 1.1
-})
-
-createParticleEmitter("2-1", subSubAtt2, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.496241, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.346,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(2),
-    Lifetime = NumberRange.new(0.1, 0.1),
-    Rate = 30,
-    Speed = NumberRange.new(2, 2),
-    LockedToPart = true,
-    Texture = "rbxassetid://116466225513361",
-    ZOffset = 1.1
-})
-
--- Beams adicionales en subSubAtt
-createBeam("1", subSubAtt, subSubAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.0940594, 0),
-        NumberSequenceKeypoint.new(0.499379, 0),
-        NumberSequenceKeypoint.new(0.894802, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.346,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
     LightEmission = 1,
-    Texture = "rbxassetid://12781812529",
-    FaceCamera = false,
-    ZOffset = 0
+    Texture = "rbxassetid://11866455263",
+    ZOffset = 0.011
 })
 
-createBeam("2", subSubAtt, subSubAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.0940594, 0),
-        NumberSequenceKeypoint.new(0.499379, 0),
-        NumberSequenceKeypoint.new(0.894802, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.346,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 1,
-    Texture = "rbxassetid://12191903502",
-    FaceCamera = false,
-    ZOffset = 0
-})
+-- ============================================================================
+-- 2. FLOOR (Efectos de suelo)
+-- ============================================================================
+print("📋 Creando efecto FLOOR...")
 
-createBeam("3", subSubAtt, subSubAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.0941, 0.5),
-        NumberSequenceKeypoint.new(0.499, 0.5),
-        NumberSequenceKeypoint.new(0.895, 0.5),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.346,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 0,
-    Texture = "rbxassetid://122462811768793",
-    FaceCamera = false,
-    ZOffset = 0.001
-})
-
--- Beam 3 en subAtt2 (directo)
-createBeam("3", subAtt2, subAtt2, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.0941, 0.5),
-        NumberSequenceKeypoint.new(0.499, 0.5),
-        NumberSequenceKeypoint.new(0.895, 0.5),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.346,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 0,
-    Texture = "rbxassetid://122462811768793",
-    FaceCamera = false,
-    ZOffset = 0.001
-})
-
--- Beam 3 en rootAtt (directo)
-createBeam("3", rootAtt, rootAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.0941, 0.5),
-        NumberSequenceKeypoint.new(0.499, 0.5),
-        NumberSequenceKeypoint.new(0.895, 0.5),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.346,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 0,
-    Texture = "rbxassetid://122462811768793",
-    FaceCamera = false,
-    ZOffset = 0.001
-})
-
--- Attachment "Floor" en rootPart
 local floorAtt = createAttachment("Floor", rootPart, Vector3.new(0, -2.9, 0))
 
--- Múltiples ParticleEmitters en Floor
-createParticleEmitter("1", floorAtt, {
+-- Múltiples capas de efectos de suelo
+createParticleEmitter("BaseGlow", floorAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.497494, 0),
@@ -867,111 +315,7 @@ createParticleEmitter("1", floorAtt, {
     ZOffset = 0.099
 })
 
-createParticleEmitter("1-1", floorAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.497494, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.16,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(1, 25.9374)
-    }),
-    Lifetime = NumberRange.new(1, 1),
-    Rate = 20,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = -2.5,
-    Texture = "rbxassetid://95823798222583",
-    ZOffset = 0.1
-})
-
-createParticleEmitter("2", floorAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.497494, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.16,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(1, 31.3843)
-    }),
-    Lifetime = NumberRange.new(1, 1),
-    Rate = 20,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = -1.5,
-    Texture = "rbxassetid://103343531376733",
-    ZOffset = 0.01
-})
-
-createParticleEmitter("4", floorAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.507519, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.16,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(1, 37.975)
-    }),
-    Lifetime = NumberRange.new(1, 1),
-    Rate = 50,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = -3,
-    Texture = "rbxassetid://83284473251919",
-    ZOffset = 0
-})
-
-createParticleEmitter("5", floorAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.507519, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.371,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(1, 34.5227)
-    }),
-    Lifetime = NumberRange.new(1, 1),
-    Rate = 50,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    Texture = "rbxassetid://11866455263",
-    ZOffset = 0.002
-})
-
-createParticleEmitter("2-1", floorAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.497494, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(1, 31.3843)
-    }),
-    Lifetime = NumberRange.new(1, 1),
-    Rate = 20,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://103343531376733",
-    ZOffset = 0.011
-})
-
-createParticleEmitter("6", floorAtt, {
+createParticleEmitter("RingEffect", floorAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.497494, 0),
@@ -989,7 +333,7 @@ createParticleEmitter("6", floorAtt, {
     ZOffset = 0.101
 })
 
-createParticleEmitter("6-1", floorAtt, {
+createParticleEmitter("Sparkles", floorAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.497494, 0),
@@ -1008,7 +352,7 @@ createParticleEmitter("6-1", floorAtt, {
     TimeScale = 0.5
 })
 
-createParticleEmitter("7", floorAtt, {
+createParticleEmitter("EnergyWave", floorAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.10401, 0),
@@ -1033,28 +377,13 @@ createParticleEmitter("7", floorAtt, {
 })
 
 -- ============================================================================
--- 5. PARTES ADICIONALES (Fogdebris, Fogdebris2, Part, Oppression)
+-- 3. FOGDEBRIS (Niebla y partículas flotantes)
 -- ============================================================================
-print("📋 Creando partes adicionales...")
+print("📋 Creando efecto FOGDEBRIS...")
 
-local function createInvisiblePart(name, size, cframe)
-    local part = Instance.new("Part")
-    part.Name = name
-    part.Parent = character
-    part.Size = size
-    part.CFrame = cframe
-    part.Transparency = 1
-    part.Anchored = true
-    part.CanCollide = false
-    part.Massless = true
-    part.BrickColor = BrickColor.new("Medium stone grey")
-    return part
-end
+local fogDebris = createInvisiblePart("Fogdebris", Vector3.new(40, 0.5, 40), rootPart.CFrame * CFrame.new(0, -5, 0))
 
--- Fogdebris
-local fogDebris = createInvisiblePart("Fogdebris", Vector3.new(40, 0.5, 40), rootPart.CFrame * CFrame.new(0, -5, 0) * CFrame.Angles(0, math.rad(-90), 0))
-
--- Emisores en Fogdebris
+-- Palabras flotantes "WHO" y "HELP"
 createParticleEmitter("Who", fogDebris, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
@@ -1091,7 +420,8 @@ createParticleEmitter("Help", fogDebris, {
     ZOffset = 0.5
 })
 
-createParticleEmitter("Fog", fogDebris, {
+-- Capas de niebla
+createParticleEmitter("Fog1", fogDebris, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.197995, 0.3375),
@@ -1111,7 +441,7 @@ createParticleEmitter("Fog", fogDebris, {
     ZOffset = -1
 })
 
-createParticleEmitter("Fog", fogDebris, {
+createParticleEmitter("Fog2", fogDebris, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.197995, 0.3375),
@@ -1131,7 +461,8 @@ createParticleEmitter("Fog", fogDebris, {
     ZOffset = -1.1
 })
 
-createParticleEmitter("Debris3", fogDebris, {
+-- Partículas de escombros
+createParticleEmitter("Debris", fogDebris, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.177374, 0),
@@ -1152,275 +483,21 @@ createParticleEmitter("Debris3", fogDebris, {
     ZOffset = 0.5
 })
 
-createParticleEmitter("Debris2", fogDebris, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.177374, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 10.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(0.25),
-    Lifetime = NumberRange.new(3, 3),
-    Rate = 10,
-    Speed = NumberRange.new(10, 10),
-    LockedToPart = false,
-    Texture = "rbxassetid://121116689038631",
-    ZOffset = 0.5
-})
+-- ============================================================================
+-- 4. OPPRESSION (Estructura compleja de energía)
+-- ============================================================================
+print("📋 Creando efecto OPPRESSION...")
 
-createParticleEmitter("Debris1", fogDebris, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.5, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 20.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(1, 2e-05)
-    }),
-    Lifetime = NumberRange.new(2, 2),
-    Rate = 10,
-    Speed = NumberRange.new(10, 10),
-    LockedToPart = false,
-    LightEmission = 1,
-    Texture = "https://assetgame.roblox.com/asset/?id=12363816...",  -- ID incompleto
-    ZOffset = 0.5
-})
+local oppressionPart = createInvisiblePart("Oppression", Vector3.new(1, 1, 1), rootPart.CFrame * CFrame.new(-13.1543, 14.7989, 0.0508) * CFrame.Angles(math.rad(5.752), math.rad(-90), 0))
 
-createParticleEmitter("1", fogDebris, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.10401, 0),
-        NumberSequenceKeypoint.new(0.497494, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 5.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 6.6875),
-        NumberSequenceKeypoint.new(1, 6.125)
-    }),
-    Lifetime = NumberRange.new(2, 2),
-    Rate = 10,
-    Speed = NumberRange.new(20, 20),
-    LockedToPart = false,
-    LightEmission = 1,
-    Texture = "rbxassetid://125036749142348",
-    ZOffset = 0.099
-})
-
-createParticleEmitter("2", fogDebris, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.497494, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 5.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(0.402228, 7.375),
-        NumberSequenceKeypoint.new(1, 2.4375)
-    }),
-    Lifetime = NumberRange.new(1, 1),
-    Rate = 10,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://16515551397",
-    ZOffset = -1
-})
-
--- Fogdebris2
-local fogDebris2 = createInvisiblePart("Fogdebris2", Vector3.new(40, 30, 40), rootPart.CFrame * CFrame.new(0, 9.75, 0) * CFrame.Angles(0, math.rad(-90), 0))
-
--- Emisores en Fogdebris2
-createParticleEmitter("2", fogDebris2, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.497494, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.16,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 2.7039),
-        NumberSequenceKeypoint.new(0.799505, 2.49648),
-        NumberSequenceKeypoint.new(1, 4.45799)
-    }),
-    Lifetime = NumberRange.new(0.5, 0.5),
-    Rate = 20,
-    Speed = NumberRange.new(0.5, 0.5),
-    LockedToPart = false,
-    Texture = "rbxassetid://103840000683513",
-    ZOffset = 2
-})
-
-createParticleEmitter("1", fogDebris2, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.497494, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 2.7039),
-        NumberSequenceKeypoint.new(0.799505, 2.49648),
-        NumberSequenceKeypoint.new(1, 4.45799)
-    }),
-    Lifetime = NumberRange.new(0.5, 0.5),
-    Rate = 20,
-    Speed = NumberRange.new(0.5, 0.5),
-    LockedToPart = false,
-    LightEmission = 1,
-    Texture = "rbxassetid://103840000683513",
-    ZOffset = 2
-})
-
--- Part (contenedor de las 4 partes hijas)
-local containerPart = createInvisiblePart("Part", Vector3.new(40, 5, 40), rootPart.CFrame * CFrame.new(0, -3, 0) * CFrame.Angles(0, math.rad(-90), 0))
-
--- Función para crear las partes hijas (1,2,3,4) dentro de containerPart
-local function createChildPart(name, cframe)
-    local child = Instance.new("Part")
-    child.Name = name
-    child.Parent = containerPart
-    child.Size = Vector3.new(10, 13, 10)
-    child.CFrame = cframe
-    child.Transparency = 1
-    child.Anchored = false
-    child.CanCollide = false
-    child.Massless = true
-    child.BrickColor = BrickColor.new("Medium stone grey")
-    return child
-end
-
--- Posiciones relativas a rootPart (calculadas a partir del archivo)
-local child1 = createChildPart("1", rootPart.CFrame * CFrame.new(0, 3.5, 20.1) * CFrame.Angles(0, math.rad(90), math.rad(180)))
-local child2 = createChildPart("2", rootPart.CFrame * CFrame.new(20.1, 3.5, 0) * CFrame.Angles(0, 0, math.rad(180)))
-local child3 = createChildPart("3", rootPart.CFrame * CFrame.new(0, 3.5, -19.9) * CFrame.Angles(0, math.rad(-90), math.rad(180)))
-local child4 = createChildPart("4", rootPart.CFrame * CFrame.new(-19.9, 3.5, 0) * CFrame.Angles(0, math.rad(180), math.rad(180)))
-
--- Función para añadir emisores a una parte hija
-local function addEmittersToChild(child)
-    createParticleEmitter("3", child, {
-        Transparency = NumberSequence.new({
-            NumberSequenceKeypoint.new(0, 1),
-            NumberSequenceKeypoint.new(0.497494, 0),
-            NumberSequenceKeypoint.new(1, 1)
-        }),
-        Brightness = 1.121,
-        Color = ColorSequence.new(Color3.new(1, 1, 1)),
-        Size = NumberSequence.new(1),
-        Lifetime = NumberRange.new(1.5, 1.5),
-        Rate = 3,
-        Speed = NumberRange.new(50, 50),
-        Drag = 3,
-        LockedToPart = true,
-        LightEmission = 1,
-        Texture = "rbxassetid://81238586112934",
-        ZOffset = 0.099
-    })
-    createParticleEmitter("2", child, {
-        Transparency = NumberSequence.new({
-            NumberSequenceKeypoint.new(0, 1),
-            NumberSequenceKeypoint.new(0.497494, 0),
-            NumberSequenceKeypoint.new(1, 1)
-        }),
-        Brightness = 1.121,
-        Color = ColorSequence.new(Color3.new(1, 1, 1)),
-        Size = NumberSequence.new(1),
-        Lifetime = NumberRange.new(1.5, 1.5),
-        Rate = 3,
-        Speed = NumberRange.new(50, 50),
-        Drag = 3,
-        LockedToPart = true,
-        LightEmission = 0.5,
-        Texture = "rbxassetid://98755040853572",
-        ZOffset = 0.099
-    })
-    createParticleEmitter("1", child, {
-        Transparency = NumberSequence.new({
-            NumberSequenceKeypoint.new(0, 1),
-            NumberSequenceKeypoint.new(0.497494, 0),
-            NumberSequenceKeypoint.new(1, 1)
-        }),
-        Brightness = 1.121,
-        Color = ColorSequence.new(Color3.new(1, 1, 1)),
-        Size = NumberSequence.new(0.5),
-        Lifetime = NumberRange.new(1.5, 1.5),
-        Rate = 10,
-        Speed = NumberRange.new(50, 50),
-        Drag = 3,
-        LockedToPart = true,
-        LightEmission = 1,
-        Texture = "rbxassetid://76354913145589",
-        ZOffset = 0.099
-    })
-    createParticleEmitter("4-1", child, {
-        Transparency = NumberSequence.new({
-            NumberSequenceKeypoint.new(0, 1),
-            NumberSequenceKeypoint.new(0.497494, 0),
-            NumberSequenceKeypoint.new(1, 1)
-        }),
-        Brightness = 0.16,
-        Color = ColorSequence.new(Color3.new(1, 1, 1)),
-        Size = NumberSequence.new({
-            NumberSequenceKeypoint.new(0, 3.6875),
-            NumberSequenceKeypoint.new(1, 0)
-        }),
-        Lifetime = NumberRange.new(1.5, 1.5),
-        Rate = 36,
-        Speed = NumberRange.new(50, 50),
-        Drag = 3,
-        LockedToPart = true,
-        LightEmission = -2,
-        Texture = "rbxassetid://125036749142348",
-        ZOffset = 2
-    })
-    createParticleEmitter("4", child, {
-        Transparency = NumberSequence.new({
-            NumberSequenceKeypoint.new(0, 1),
-            NumberSequenceKeypoint.new(0.497494, 0),
-            NumberSequenceKeypoint.new(1, 1)
-        }),
-        Brightness = 10.121,
-        Color = ColorSequence.new(Color3.new(1, 1, 1)),
-        Size = NumberSequence.new({
-            NumberSequenceKeypoint.new(0, 3.6875),
-            NumberSequenceKeypoint.new(1, 0)
-        }),
-        Lifetime = NumberRange.new(1.5, 1.5),
-        Rate = 36,
-        Speed = NumberRange.new(50, 50),
-        Drag = 3,
-        LockedToPart = true,
-        LightEmission = 1,
-        Texture = "rbxassetid://125036749142348",
-        ZOffset = 2
-    })
-end
-
-addEmittersToChild(child1)
-addEmittersToChild(child2)
-addEmittersToChild(child3)
-addEmittersToChild(child4)
-
--- Oppression Part
-local oppressionPart = createInvisiblePart("Oppression", Vector3.new(1, 1, 1), rootPart.CFrame * CFrame.new(-13.1543, 14.7989, 0.0508) * CFrame.Angles(math.rad(5.752), math.rad(-90), 0))  -- Ajuste aproximado
-
--- Attachment Oppression
+-- Attachment principal
 local oppressionAtt = createAttachment("Oppression", oppressionPart, Vector3.new(0, 0, 0))
 oppressionAtt.Rotation = Vector3.new(39.9985, 0, 0)
 
--- Star attachment
+-- STAR (efecto de estrella central)
 local starAtt = createAttachment("Star", oppressionAtt, Vector3.new(0, 0, 0))
--- Emisores en Star
-createParticleEmitter("1-1", starAtt, {
+
+createParticleEmitter("StarCore", starAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.500621, 0),
@@ -1437,7 +514,8 @@ createParticleEmitter("1-1", starAtt, {
     Texture = "rbxassetid://116466225513361",
     ZOffset = 5.001
 })
-createParticleEmitter("2", starAtt, {
+
+createParticleEmitter("StarGlow", starAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.496241, 0.65625),
@@ -1457,24 +535,8 @@ createParticleEmitter("2", starAtt, {
     Texture = "rbxassetid://73657399065176",
     ZOffset = 4.999
 })
-createParticleEmitter("1-2", starAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.500621, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 5.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(2.94413),
-    Lifetime = NumberRange.new(2, 2),
-    Rate = 1,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://102108673611194",
-    ZOffset = 5.001
-})
-createParticleEmitter("1", starAtt, {
+
+createParticleEmitter("StarHalo", starAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.500621, 0),
@@ -1492,17 +554,14 @@ createParticleEmitter("1", starAtt, {
     ZOffset = 5
 })
 
--- Light attachment
+-- LIGHT (rayos de luz)
 local lightAtt = createAttachment("Light", oppressionAtt, Vector3.new(0, 0, 0))
 lightAtt.Rotation = Vector3.new(-180, 0, 0)
 
--- Beams en Light (con attachments hijos)
--- Nota: En el archivo, Light tiene dos hijos Attachment (1 y 2) con beams.
--- Simplificamos creando dos attachments y beams entre ellos.
-local lightChild1 = createAttachment("1", lightAtt, Vector3.new(0, 0, 0))
-local lightChild2 = createAttachment("2", lightAtt, Vector3.new(0, 20, -0.00006103515625))
+local lightChild1 = createAttachment("LightStart", lightAtt, Vector3.new(0, 0, 0))
+local lightChild2 = createAttachment("LightEnd", lightAtt, Vector3.new(0, 20, -0.00006))
 
-createBeam("Beam", lightChild1, lightChild2, {
+createBeam("LightBeam1", lightChild1, lightChild2, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.499379, 0),
@@ -1516,7 +575,7 @@ createBeam("Beam", lightChild1, lightChild2, {
     ZOffset = 4
 })
 
-createBeam("Beam", lightChild1, lightChild2, {
+createBeam("LightBeam2", lightChild1, lightChild2, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.499379, 0),
@@ -1530,16 +589,16 @@ createBeam("Beam", lightChild1, lightChild2, {
     ZOffset = 4
 })
 
--- X attachment
+-- X (estructura en forma de X)
 local xAtt = createAttachment("X", oppressionAtt, Vector3.new(0, 0, 0))
 
--- Part1 dentro de X
-local part1Att = createAttachment("Part1", xAtt, Vector3.new(0, 0, 0))
+-- Brazo 1 de la X
+local part1Att = createAttachment("Arm1", xAtt, Vector3.new(0, 0, 0))
+local arm1End1 = createAttachment("Arm1End1", part1Att, Vector3.new(7, 0, 7), Vector3.new(0, -1, 0), Vector3.new(1, 0, 0))
+local arm1End2 = createAttachment("Arm1End2", part1Att, Vector3.new(-7, 0, -7), Vector3.new(-0.0871315, -0.996196866, 0), Vector3.new(0.996196866, -0.0871315, 0))
 
--- Attachments dentro de Part1
-local part1Child1 = createAttachment("1", part1Att, Vector3.new(7, 0, 7), Vector3.new(0, -1, 0), Vector3.new(1, 0, 0))
--- Beams y emitter en part1Child1
-createBeam("Beam", part1Child1, part1Child1, {
+-- Beams del brazo 1
+createBeam("XBeam1", arm1End1, arm1End1, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 0.5),
         NumberSequenceKeypoint.new(1, 0.5)
@@ -1552,7 +611,8 @@ createBeam("Beam", part1Child1, part1Child1, {
     FaceCamera = true,
     ZOffset = 0
 })
-createBeam("Beam", part1Child1, part1Child1, {
+
+createBeam("XBeam2", arm1End2, arm1End2, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 0.5),
         NumberSequenceKeypoint.new(1, 0.5)
@@ -1565,31 +625,28 @@ createBeam("Beam", part1Child1, part1Child1, {
     FaceCamera = true,
     ZOffset = 0
 })
-createParticleEmitter("ParticleEmitter", part1Child1, {
+
+-- Brazo 2 de la X
+local part2Att = createAttachment("Arm2", xAtt, Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), Vector3.new(0, 1, 0))
+local arm2End1 = createAttachment("Arm2End1", part2Att, Vector3.new(7, 0, 7), Vector3.new(0, -1, 0), Vector3.new(1, 0, 0))
+local arm2End2 = createAttachment("Arm2End2", part2Att, Vector3.new(-7, 0, -7), Vector3.new(-0.0871315, -0.996196866, 0), Vector3.new(0.996196866, -0.0871315, 0))
+
+-- Beams del brazo 2
+createBeam("XBeam3", arm2End1, arm2End1, {
     Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.500621, 0),
-        NumberSequenceKeypoint.new(1, 1)
+        NumberSequenceKeypoint.new(0, 0.5),
+        NumberSequenceKeypoint.new(1, 0.5)
     }),
     Brightness = 1.121,
     Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 5),
-        NumberSequenceKeypoint.new(0.499308, 0),
-        NumberSequenceKeypoint.new(1, 5)
-    }),
-    Lifetime = NumberRange.new(2.5, 2.5),
-    Rate = 2.5,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://112978871557148",
-    ZOffset = 1.114
+    LightEmission = 0,
+    LightInfluence = 1,
+    Texture = "rbxassetid://12191903502",
+    FaceCamera = true,
+    ZOffset = 0
 })
 
-local part1Child2 = createAttachment("2", part1Att, Vector3.new(-7, 0, -7), Vector3.new(-0.0871315, -0.996196866, 0), Vector3.new(0.996196866, -0.0871315, 0))
--- Beams y emitter en part1Child2 (similar)
-createBeam("Beam", part1Child2, part1Child2, {
+createBeam("XBeam4", arm2End2, arm2End2, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 0.5),
         NumberSequenceKeypoint.new(1, 0.5)
@@ -1602,43 +659,9 @@ createBeam("Beam", part1Child2, part1Child2, {
     FaceCamera = true,
     ZOffset = 0
 })
-createBeam("Beam", part1Child2, part1Child2, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.5),
-        NumberSequenceKeypoint.new(1, 0.5)
-    }),
-    Brightness = 1.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 0,
-    LightInfluence = 1,
-    Texture = "rbxassetid://12191903502",
-    FaceCamera = true,
-    ZOffset = 0
-})
-createParticleEmitter("ParticleEmitter", part1Child2, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.500621, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 5),
-        NumberSequenceKeypoint.new(0.499308, 0),
-        NumberSequenceKeypoint.new(1, 5)
-    }),
-    Lifetime = NumberRange.new(2.5, 2.5),
-    Rate = 2.5,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://112978871557148",
-    ZOffset = 1.113
-})
 
--- Beams adicionales desde part1Att
-createBeam("Beam", part1Att, part1Att, {
+-- Beams centrales
+createBeam("XCoreBeam1", part1Att, part1Att, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.500621, 0),
@@ -1651,7 +674,8 @@ createBeam("Beam", part1Att, part1Att, {
     FaceCamera = false,
     ZOffset = 2.5
 })
-createBeam("Beam", part1Att, part1Att, {
+
+createBeam("XCoreBeam2", part2Att, part2Att, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.501863, 0.47205),
@@ -1665,193 +689,10 @@ createBeam("Beam", part1Att, part1Att, {
     ZOffset = 2.5
 })
 
--- Part2 dentro de X
-local part2Att = createAttachment("Part2", xAtt, Vector3.new(0, 0, 0), Vector3.new(0, 0, -1), Vector3.new(0, 1, 0))
-
--- Attachments dentro de Part2
-local part2Child1 = createAttachment("1", part2Att, Vector3.new(7, 0, 7), Vector3.new(0, -1, 0), Vector3.new(1, 0, 0))
--- Beams y emitter en part2Child1
-createBeam("Beam", part2Child1, part2Child1, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.5),
-        NumberSequenceKeypoint.new(1, 0.5)
-    }),
-    Brightness = 1.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 0,
-    LightInfluence = 1,
-    Texture = "rbxassetid://12191903502",
-    FaceCamera = true,
-    ZOffset = 0
-})
-createBeam("Beam", part2Child1, part2Child1, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.5),
-        NumberSequenceKeypoint.new(1, 0.5)
-    }),
-    Brightness = 1.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 0,
-    LightInfluence = 1,
-    Texture = "rbxassetid://12781812529",
-    FaceCamera = true,
-    ZOffset = 0
-})
-createParticleEmitter("ParticleEmitter", part2Child1, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.500621, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 5),
-        NumberSequenceKeypoint.new(0.499308, 0),
-        NumberSequenceKeypoint.new(1, 5)
-    }),
-    Lifetime = NumberRange.new(2.5, 2.5),
-    Rate = 2.5,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://112978871557148",
-    ZOffset = 1.112
-})
-
-local part2Child2 = createAttachment("2", part2Att, Vector3.new(-7, 0, -7), Vector3.new(-0.0871315, -0.996196866, 0), Vector3.new(0.996196866, -0.0871315, 0))
--- Beams y emitter en part2Child2
-createBeam("Beam", part2Child2, part2Child2, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.5),
-        NumberSequenceKeypoint.new(1, 0.5)
-    }),
-    Brightness = 1.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 0,
-    LightInfluence = 1,
-    Texture = "rbxassetid://12781812529",
-    FaceCamera = true,
-    ZOffset = 0
-})
-createBeam("Beam", part2Child2, part2Child2, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.5),
-        NumberSequenceKeypoint.new(1, 0.5)
-    }),
-    Brightness = 1.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 0,
-    LightInfluence = 1,
-    Texture = "rbxassetid://12191903502",
-    FaceCamera = true,
-    ZOffset = 0
-})
-createParticleEmitter("ParticleEmitter", part2Child2, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.500621, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 5),
-        NumberSequenceKeypoint.new(0.499308, 0),
-        NumberSequenceKeypoint.new(1, 5)
-    }),
-    Lifetime = NumberRange.new(2.5, 2.5),
-    Rate = 2.5,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://112978871557148",
-    ZOffset = 1.111
-})
-
--- Beams adicionales desde part2Att
-createBeam("Beam", part2Att, part2Att, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.500621, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 25.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 1,
-    Texture = "rbxassetid://12781812529",
-    FaceCamera = false,
-    ZOffset = 2.5
-})
-createBeam("Beam", part2Att, part2Att, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.501863, 0.47205),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 25.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 1,
-    Texture = "rbxassetid://122462811768793",
-    FaceCamera = false,
-    ZOffset = 2.5
-})
-
--- Head attachment dentro de X
-local headAttX = createAttachment("Head", xAtt, Vector3.new(0, 0, 0), Vector3.new(-0.0871315, -0.996196866, 0), Vector3.new(0.996196866, -0.0871315, 0))
--- Efectos en headAttX
-createBeam("Beam", headAttX, headAttX, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.5),
-        NumberSequenceKeypoint.new(1, 0.5)
-    }),
-    Brightness = 1.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 0,
-    LightInfluence = 1,
-    Texture = "rbxassetid://12781812529",
-    FaceCamera = false,
-    ZOffset = 0
-})
-createBeam("Beam", headAttX, headAttX, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.501863, 0.47205),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    LightEmission = 0,
-    LightInfluence = 1,
-    Texture = "rbxassetid://122462811768793",
-    FaceCamera = false,
-    ZOffset = 0
-})
-createParticleEmitter("ParticleEmitter", headAttX, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.500621, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 5),
-        NumberSequenceKeypoint.new(0.499308, 0),
-        NumberSequenceKeypoint.new(1, 5)
-    }),
-    Lifetime = NumberRange.new(2.5, 2.5),
-    Rate = 2.5,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://112978871557148",
-    ZOffset = 1.114
-})
-
--- Ring attachment
+-- RING (anillos de energía)
 local ringAtt = createAttachment("Ring", oppressionAtt, Vector3.new(0, 0, 0))
-createParticleEmitter("1-1", ringAtt, {
+
+createParticleEmitter("RingGlow", ringAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.500621, 0),
@@ -1871,7 +712,8 @@ createParticleEmitter("1-1", ringAtt, {
     Texture = "rbxassetid://72797430716532",
     ZOffset = 0
 })
-createParticleEmitter("1", ringAtt, {
+
+createParticleEmitter("RingHalo", ringAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.500621, 0),
@@ -1892,30 +734,10 @@ createParticleEmitter("1", ringAtt, {
     ZOffset = 0
 })
 
--- Particle attachment
+-- PARTICLE (efectos de partículas adicionales)
 local particleAtt = createAttachment("Particle", oppressionAtt, Vector3.new(0, 0, 0))
-createParticleEmitter("1-1", particleAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.497494, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.16,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1.375),
-        NumberSequenceKeypoint.new(1, 5.125)
-    }),
-    Lifetime = NumberRange.new(1.5, 1.5),
-    Rate = 36,
-    Speed = NumberRange.new(100, 100),
-    Drag = 5,
-    LockedToPart = true,
-    LightEmission = -2,
-    Texture = "rbxassetid://125036749142348",
-    ZOffset = 2
-})
-createParticleEmitter("1", particleAtt, {
+
+createParticleEmitter("ParticleGlow", particleAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.497494, 0),
@@ -1936,7 +758,8 @@ createParticleEmitter("1", particleAtt, {
     Texture = "rbxassetid://125036749142348",
     ZOffset = 2
 })
-createParticleEmitter("2", particleAtt, {
+
+createParticleEmitter("ParticleSpark", particleAtt, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.5, 0),
@@ -1954,178 +777,15 @@ createParticleEmitter("2", particleAtt, {
     Drag = 3,
     LockedToPart = true,
     LightEmission = 1,
-    Texture = "https://assetgame.roblox.com/asset/?id=12363816...",
+    Texture = "https://assetgame.roblox.com/asset/?id=12363816...", -- ID incompleto
     ZOffset = 0.5
 })
 
--- Emisores directamente en oppressionPart
-createParticleEmitter("5", oppressionPart, {
+-- Efectos adicionales en la parte Oppression
+createParticleEmitter("OppressionGlow", oppressionPart, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.493734, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.16,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 27.4132),
-        NumberSequenceKeypoint.new(1, 39.8737)
-    }),
-    Lifetime = NumberRange.new(2, 2),
-    Rate = 25,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    Texture = "rbxassetid://12528455353",
-    ZOffset = -1
-})
-createParticleEmitter("4", oppressionPart, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.483709, 0.53125),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.16,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(1, 18.32)
-    }),
-    Lifetime = NumberRange.new(1, 1),
-    Rate = 50,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = -2,
-    Texture = "rbxassetid://95823798222583",
-    ZOffset = 0.004
-})
-createParticleEmitter("3-1", oppressionPart, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.497494, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.16,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(1, 21.8392)
-    }),
-    Lifetime = NumberRange.new(1, 1),
-    Rate = 50,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = -4,
-    Texture = "rbxassetid://95823798222583",
-    ZOffset = 0.003
-})
-createParticleEmitter("3", oppressionPart, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.497494, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(1, 21.8392)
-    }),
-    Lifetime = NumberRange.new(1, 1),
-    Rate = 50,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://95823798222583",
-    ZOffset = 0.002
-})
-createParticleEmitter("2", oppressionPart, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.02, 0),
-        NumberSequenceKeypoint.new(0.355932, 0.6625),
-        NumberSequenceKeypoint.new(0.605085, 0.88125),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 5.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(15.0671),
-    Lifetime = NumberRange.new(2, 2),
-    Rate = 1,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://128773079087704",
-    ZOffset = 0.1
-})
-createParticleEmitter("1-1", oppressionPart, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.497494, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 2.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(1, 32.9535)
-    }),
-    Lifetime = NumberRange.new(2, 2),
-    Rate = 2,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = -3,
-    Texture = "rbxassetid://92903612831994",
-    ZOffset = 0,
-    TimeScale = 0.65
-})
-createParticleEmitter("1", oppressionPart, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.02, 0),
-        NumberSequenceKeypoint.new(0.355932, 0.6625),
-        NumberSequenceKeypoint.new(0.605085, 0.88125),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 5.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(23.0596),
-    Lifetime = NumberRange.new(2, 2),
-    Rate = 1,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = 0,
-    Texture = "rbxassetid://92903612831994",
-    ZOffset = 0.001,
-    TimeScale = 0.75
-})
-
-local oppressionInnerAtt = createAttachment("Attachment", oppressionPart, Vector3.new(0, 0, 0))
-createParticleEmitter("ParticleEmitter", oppressionInnerAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.2, 0.5),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 20.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.203198, 13.34),
-        NumberSequenceKeypoint.new(0.415198, 18.7067),
-        NumberSequenceKeypoint.new(0.679198, 21.39),
-        NumberSequenceKeypoint.new(1, 23)
-    }),
-    Lifetime = NumberRange.new(1, 1),
-    Rate = 20,
-    Speed = NumberRange.new(-2, 2),
-    LockedToPart = true,
-    Texture = "rbxassetid://18951936601",
-    ZOffset = -1.001
-})
-createParticleEmitter("6-1", oppressionPart, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.5, 0),
         NumberSequenceKeypoint.new(1, 1)
     }),
     Brightness = 1.121,
@@ -2139,7 +799,8 @@ createParticleEmitter("6-1", oppressionPart, {
     Texture = "rbxassetid://76354913145589",
     ZOffset = 0.499
 })
-createParticleEmitter("6", oppressionPart, {
+
+createParticleEmitter("OppressionHalo", oppressionPart, {
     Transparency = NumberSequence.new({
         NumberSequenceKeypoint.new(0, 1),
         NumberSequenceKeypoint.new(0.5, 0),
@@ -2156,327 +817,23 @@ createParticleEmitter("6", oppressionPart, {
     Texture = "rbxassetid://76354913145589",
     ZOffset = 0.5
 })
-createParticleEmitter("7", oppressionPart, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.493734, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.16,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(15),
-    Lifetime = NumberRange.new(1, 1),
-    Rate = 100,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = -1,
-    Texture = "rbxassetid://14707966237",
-    ZOffset = 4
-})
 
 -- ============================================================================
--- 6. SOUND
--- ============================================================================
-print("📋 Creando Sound...")
-
-local sound = Instance.new("Sound")
-sound.Name = "Sound"
-sound.Parent = rootPart
-sound.SoundId = "rbxassetid://18633070349"
-sound.Volume = 0
-sound.Pitch = 1
-sound.Looped = true
-sound.Playing = false
-sound.TimePosition = 0
-sound.MaxDistance = 10000
-sound.MinDistance = 10
-sound.RollOffMode = Enum.RollOffMode.InverseTapered
-
--- ============================================================================
--- 7. EFECTOS EN TORSO (CORAZÓN)
--- ============================================================================
-print("📋 Creando efectos en Torso (Heart)...")
-
-local heartAtt = createAttachment("Heart", torso, Vector3.new(0, 0.25, -1.424), Vector3.new(0, -1, 0), Vector3.new(1, 0, 0))
-
--- star 0.2
-createParticleEmitter("star 0.2", heartAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.502475, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.23,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(1),
-    Lifetime = NumberRange.new(3, 3),
-    Rate = 2,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    Texture = "rbxassetid://116466225513361",
-    ZOffset = 0.099
-})
-
--- Ring (primero)
-createParticleEmitter("Ring", heartAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.502475, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.23,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.902138),
-        NumberSequenceKeypoint.new(1, 0)
-    }),
-    Lifetime = NumberRange.new(0.8, 0.8),
-    Rate = 50,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    Texture = "http://www.roblox.com/asset/?id=72797430716532",
-    ZOffset = 0.097
-})
-
--- Ring (segundo)
-createParticleEmitter("Ring", heartAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.502475, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.23,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.902138),
-        NumberSequenceKeypoint.new(1, 0)
-    }),
-    Lifetime = NumberRange.new(0.8, 0.8),
-    Rate = 15,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    Texture = "http://www.roblox.com/asset/?id=72797430716532",
-    ZOffset = 0.098
-})
-
--- Black 2
-createParticleEmitter("Black 2", heartAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.502475, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.23,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(0.52488),
-    Lifetime = NumberRange.new(3, 3),
-    Rate = 2,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    Texture = "rbxassetid://13280229340",
-    ZOffset = 0.097
-})
-
--- Heart inner attachments
-local heartInner1 = createAttachment("Attachment", heartAtt, Vector3.new(0, -0.086029052734375, 0))
-createParticleEmitter("Heart(Right)", heartInner1, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.502475, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.23,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(1),
-    Lifetime = NumberRange.new(0.6, 0.6),
-    Rate = 15,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    Texture = "http://www.roblox.com/asset/?id=17278805871",
-    ZOffset = 0.2
-})
-
-local heartInner2 = createAttachment("Attachment", heartAtt, Vector3.new(0, 0.0539703369140625, 0))
-createParticleEmitter("Heart(Left)", heartInner2, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.502475, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.23,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(1),
-    Lifetime = NumberRange.new(0.6, 0.6),
-    Rate = 15,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    Texture = "http://www.roblox.com/asset/?id=17278805287",
-    ZOffset = 0.2
-})
-
--- star -5
-createParticleEmitter("star -5", heartAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.502475, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.23,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(0.6),
-    Lifetime = NumberRange.new(3, 3),
-    Rate = 2,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://116466225513361",
-    ZOffset = 0.1
-})
-
--- star -2
-createParticleEmitter("star -2", heartAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.502475, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.23,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(1),
-    Lifetime = NumberRange.new(3, 3),
-    Rate = 2,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    Texture = "rbxassetid://116466225513361",
-    ZOffset = 0.099
-})
-
--- star 0.5
-createParticleEmitter("star 0.5", heartAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.502475, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.23,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(0.5),
-    Lifetime = NumberRange.new(3, 3),
-    Rate = 2,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://116466225513361",
-    ZOffset = 0.1
-})
-
--- Black (primero)
-createParticleEmitter("Black", heartAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.502475, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.23,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.478297),
-        NumberSequenceKeypoint.new(1, 1.19574)
-    }),
-    Lifetime = NumberRange.new(0.5, 0.5),
-    Rate = 60,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    Texture = "rbxassetid://11866455263",
-    ZOffset = 0.01
-})
-
--- Black (segundo)
-createParticleEmitter("Black", heartAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.502475, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.23,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.28243),
-        NumberSequenceKeypoint.new(1, 0.706074)
-    }),
-    Lifetime = NumberRange.new(0.5, 0.5),
-    Rate = 60,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    Texture = "rbxassetid://11866455263",
-    ZOffset = 0.012
-})
-
--- White
-createParticleEmitter("White", heartAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.502475, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 5.23,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.430467),
-        NumberSequenceKeypoint.new(1, 1.07617)
-    }),
-    Lifetime = NumberRange.new(0.7, 0.7),
-    Rate = 30,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://11866455263",
-    ZOffset = 0.011
-})
-
--- White2
-createParticleEmitter("White2", heartAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.502475, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 1.23,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(1.08256),
-    Lifetime = NumberRange.new(1, 1),
-    Rate = 2,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://92903612831994",
-    ZOffset = 0,
-    TimeScale = 0.25
-})
-
--- ============================================================================
--- 8. SISTEMA DE SEGUIMIENTO PARA PARTES ANCLADAS
+-- 5. SISTEMA DE SEGUIMIENTO
 -- ============================================================================
 print("📋 Configurando sistema de seguimiento...")
 
-local partsToFollow = {fogDebris, fogDebris2, containerPart, oppressionPart, child1, child2, child3, child4}
+local partsToFollow = {fogDebris, oppressionPart}
 
 game:GetService("RunService").Heartbeat:Connect(function()
     if character and character.Parent then
         local currentRootCF = rootPart.CFrame
-        fogDebris.CFrame = currentRootCF * CFrame.new(0, -5, 0) * CFrame.Angles(0, math.rad(-90), 0)
-        fogDebris2.CFrame = currentRootCF * CFrame.new(0, 9.75, 0) * CFrame.Angles(0, math.rad(-90), 0)
-        containerPart.CFrame = currentRootCF * CFrame.new(0, -3, 0) * CFrame.Angles(0, math.rad(-90), 0)
+        fogDebris.CFrame = currentRootCF * CFrame.new(0, -5, 0)
         oppressionPart.CFrame = currentRootCF * CFrame.new(-13.1543, 14.7989, 0.0508) * CFrame.Angles(math.rad(5.752), math.rad(-90), 0)
-        
-        child1.CFrame = currentRootCF * CFrame.new(0, 3.5, 20.1) * CFrame.Angles(0, math.rad(90), math.rad(180))
-        child2.CFrame = currentRootCF * CFrame.new(20.1, 3.5, 0) * CFrame.Angles(0, 0, math.rad(180))
-        child3.CFrame = currentRootCF * CFrame.new(0, 3.5, -19.9) * CFrame.Angles(0, math.rad(-90), math.rad(180))
-        child4.CFrame = currentRootCF * CFrame.new(-19.9, 3.5, 0) * CFrame.Angles(0, math.rad(180), math.rad(180))
     else
         return
     end
 end)
 
-print("✨✨✨ CONSTRUCCIÓN COMPLETA DE WIKIDUMMY (VERSIÓN CON GUI) ✨✨✨")
-print("Total de objetos creados: aproximadamente 229.")
+print("✨✨✨ CONSTRUCCIÓN COMPLETA DE WIKIDUMMY (VERSIÓN LIGERA) ✨✨✨")
+print("Efectos incluidos: Heart, Floor, Fogdebris y Oppression")
