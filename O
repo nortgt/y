@@ -416,49 +416,6 @@ createParticleEmitter("2", floorAtt, {
     ZOffset = 0.01
 })
 
--- Efecto 4
-createParticleEmitter("4", floorAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.507519, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.16,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(1, 37.975)
-    }),
-    Lifetime = NumberRange.new(1, 1),
-    Rate = 50,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    LightEmission = -3,
-    Texture = "rbxassetid://83284473251919",
-    ZOffset = 0
-})
-
--- Efecto 5
-createParticleEmitter("5", floorAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.507519, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.371,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0),
-        NumberSequenceKeypoint.new(1, 34.5227)
-    }),
-    Lifetime = NumberRange.new(1, 1),
-    Rate = 50,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    Texture = "rbxassetid://11866455263",
-    ZOffset = 0.002
-})
-
 -- Efecto 2-1 (versión brillante del 2)
 createParticleEmitter("2-1", floorAtt, {
     Transparency = NumberSequence.new({
@@ -630,68 +587,6 @@ createParticleEmitter("Fog2", fogDebris, {
     ZOffset = -1.1
 })
 
--- Efecto Debris3
-createParticleEmitter("Debris3", fogDebris, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.177374, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 10.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.1875),
-        NumberSequenceKeypoint.new(1, 0.8125)
-    }),
-    Lifetime = NumberRange.new(2, 2),
-    Rate = 10,
-    Speed = NumberRange.new(20, 20),
-    Drag = 0.6,
-    LockedToPart = false,
-    Texture = "rbxassetid://98755040853572",
-    ZOffset = 0.5
-})
-
--- Efecto Debris2
-createParticleEmitter("Debris2", fogDebris, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.177374, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 10.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new(0.25),
-    Lifetime = NumberRange.new(3, 3),
-    Rate = 10,
-    Speed = NumberRange.new(10, 10),
-    LockedToPart = false,
-    Texture = "rbxassetid://121116689038631",
-    ZOffset = 0.5
-})
-
--- Efecto Debris1
-createParticleEmitter("Debris1", fogDebris, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.5, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 20.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(1, 2e-05)
-    }),
-    Lifetime = NumberRange.new(2, 2),
-    Rate = 10,
-    Speed = NumberRange.new(10, 10),
-    LockedToPart = false,
-    LightEmission = 1,
-    Texture = "https://assetgame.roblox.com/asset/?id=12363816...", -- ID incompleto
-    ZOffset = 0.5
-})
-
 -- Efecto 1
 createParticleEmitter("1", fogDebris, {
     Transparency = NumberSequence.new({
@@ -747,27 +642,6 @@ local oppressionPart = createInvisiblePart("Oppression", Vector3.new(1, 1, 1), r
 -- ==================================================
 -- 4.1 EFECTOS DIRECTAMENTE EN LA PARTE (10 efectos)
 -- ==================================================
-
--- Efecto 5 (partículas grandes)
-createParticleEmitter("5", oppressionPart, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.493734, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 0.16,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 27.4132),
-        NumberSequenceKeypoint.new(1, 39.8737)
-    }),
-    Lifetime = NumberRange.new(2, 2),
-    Rate = 25,
-    Speed = NumberRange.new(0.001, 0.001),
-    LockedToPart = true,
-    Texture = "rbxassetid://12528455353",
-    ZOffset = -1
-})
 
 -- Efecto 4
 createParticleEmitter("4", oppressionPart, {
@@ -1229,53 +1103,6 @@ createParticleEmitter("RingHalo", ringAtt, {
     LightEmission = -1,
     Texture = "rbxassetid://72797430716532",
     ZOffset = 0
-})
-
--- PARTICLE (efectos de partículas adicionales)
-local particleAtt = createAttachment("Particle", oppressionAtt, Vector3.new(0, 0, 0))
-
-createParticleEmitter("ParticleGlow", particleAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.497494, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 10.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1.375),
-        NumberSequenceKeypoint.new(1, 5.125)
-    }),
-    Lifetime = NumberRange.new(1.5, 1.5),
-    Rate = 36,
-    Speed = NumberRange.new(100, 100),
-    Drag = 5,
-    LockedToPart = true,
-    LightEmission = 1,
-    Texture = "rbxassetid://125036749142348",
-    ZOffset = 2
-})
-
-createParticleEmitter("ParticleSpark", particleAtt, {
-    Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 1),
-        NumberSequenceKeypoint.new(0.5, 0),
-        NumberSequenceKeypoint.new(1, 1)
-    }),
-    Brightness = 20.121,
-    Color = ColorSequence.new(Color3.new(1, 1, 1)),
-    Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 2.3125),
-        NumberSequenceKeypoint.new(1, 2e-05)
-    }),
-    Lifetime = NumberRange.new(1, 1),
-    Rate = 20,
-    Speed = NumberRange.new(75, 75),
-    Drag = 3,
-    LockedToPart = true,
-    LightEmission = 1,
-    Texture = "https://assetgame.roblox.com/asset/?id=12363816...",
-    ZOffset = 0.5
 })
 
 -- ============================================================================
