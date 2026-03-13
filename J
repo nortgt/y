@@ -1,8 +1,14 @@
+--[[
+    Script extraído de Byte_John Doe.lua
+    Contiene: Aura, Nombre flotante, Skybox y Efectos de muerte
+--]]
+
 local player = game:GetService("Players").LocalPlayer
 local chara = player.Character or player.CharacterAdded:Wait()
 local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
 
+-- Función para crear objetos fácilmente
 local function New(Object, Parent, Name, Data)
     local Object = Instance.new(Object)
     for Index, Value in pairs(Data or {}) do
@@ -13,6 +19,11 @@ local function New(Object, Parent, Name, Data)
     return Object
 end
 
+--[[======================
+    2. FUNCIONES DE EFECTOS (AURA)
+    ======================]]
+
+-- Efecto de partículas quemantes (el "aura" del personaje)
 local function BurningEff(part)
     local eff1 = Instance.new("ParticleEmitter", part)
     eff1.Size = NumberSequence.new(0.1)
@@ -59,10 +70,13 @@ local function BurningEff(part)
     eff3.Color = ColorSequence.new(Color3.new(1, 0, 0))
 end
 
+-- Crear partes con el aura (para que el personaje tenga el efecto)
 local function CreateAura()
+    -- Esperar a que el personaje esté completamente cargado
     local torso = chara:WaitForChild("Torso") or chara:WaitForChild("UpperTorso")
     local humanoid = chara:WaitForChild("Humanoid")
     
+    -- Crear partes invisibles con el efecto de partículas
     local auraPart1 = New("Part", chara, "AuraPart1", {
         Size = Vector3.new(2, 2, 1),
         Transparency = 1,
@@ -84,6 +98,7 @@ local function CreateAura()
         Anchored = false
     })
     
+    -- Soldar las partes al torso (para que sigan al personaje)
     local weld1 = Instance.new("Weld")
     weld1.Part0 = torso
     weld1.Part1 = auraPart1
@@ -102,10 +117,12 @@ local function CreateAura()
     weld3.C0 = CFrame.new(-1.5, 0, 0)
     weld3.Parent = auraPart3
     
+    -- Aplicar el efecto a todas las partes
     BurningEff(auraPart1)
     BurningEff(auraPart2)
     BurningEff(auraPart3)
     
+    -- También crear rastros en el suelo (como el original)
     RunService.Heartbeat:Connect(function()
         if humanoid and humanoid.Health > 0 then
             local jtrace = Instance.new("Part", workspace)
@@ -122,16 +139,22 @@ local function CreateAura()
     end)
 end
 
+--[[======================
+    6. NOMBRE FLOTANTE
+    ======================]]
+
 local function CreateFloatingName()
     local head = chara:WaitForChild("Head")
     local humanoid = chara:WaitForChild("Humanoid")
     
+    -- Crear BillboardGui
     local nameGui = New("BillboardGui", chara, "NameTag", {
         Size = UDim2.new(0, 100, 0, 40),
         StudsOffset = Vector3.new(0, 2, 0),
         Adornee = head
     })
     
+    -- Crear TextLabel
     local nameLabel = New("TextLabel", nameGui, "NameLabel", {
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
@@ -144,9 +167,10 @@ local function CreateFloatingName()
         Size = UDim2.new(1, 0, 0.5, 0)
     })
     
+    -- Bucle para cambiar el texto aleatoriamente
     coroutine.wrap(function()
         while humanoid and humanoid.Health > 0 do
-            wait(0.1)
+            wait(0.1) -- .01 en el original, pero .1 es más eficiente
             local chance = math.random(0, 100)
             if chance < 10 then
                 local sel = math.random(1, 3)
@@ -161,6 +185,7 @@ local function CreateFloatingName()
                 nameLabel.Text = "Emma"
             end
             
+            -- Efecto de temblor (opcional)
             nameLabel.Position = UDim2.new(0, math.random(-3, 3), 0, math.random(-3, 3))
         end
     end)()
@@ -168,7 +193,12 @@ local function CreateFloatingName()
     return nameGui, nameLabel
 end
 
+--[[======================
+    7. SKYBOX PERSONALIZADO
+    ======================]]
+
 local function CreateSkybox()
+    -- Crear la esfera roja gigante
     local skybox = New("Part", chara, "SkyboxPart", {
         Size = Vector3.new(0, 0, 0),
         Anchored = true,
@@ -177,21 +207,27 @@ local function CreateSkybox()
     })
     
     local skyboxMesh = New("SpecialMesh", skybox, "Mesh", {
-        MeshId = "http://www.roblox.com/asset/?id=1527559",
-        TextureId = "http://www.roblox.com/asset/?id=1529455",
-        VertexColor = Vector3.new(1, 0, 0),
-        Scale = Vector3.new(-3000, -1000, -3000)
+        MeshId = "http://www.roblox.com/asset/?id=1527559", -- Esfera
+        TextureId = "http://www.roblox.com/asset/?id=1529455", -- Textura
+        VertexColor = Vector3.new(1, 0, 0), -- Color rojo
+        Scale = Vector3.new(-3000, -1000, -3000) -- Tamaño gigante
     })
     
+    -- Rotar la esfera continuamente
     coroutine.wrap(function()
         while skybox and skybox.Parent do
-            wait(0.1)
+            wait(0.1) -- .01 en el original, pero .1 es más eficiente
             skybox.CFrame = skybox.CFrame * CFrame.fromEulerAnglesXYZ(0, math.rad(1), 0)
         end
     end)()
     
     return skybox
 end
+
+--[[======================
+    10. MECÁNICA DE MUERTE
+    (SOLO ILUMINACIÓN)
+    ======================]]
 
 local function SetupDeathEffects()
     local humanoid = chara:WaitForChild("Humanoid")
@@ -200,22 +236,33 @@ local function SetupDeathEffects()
     local nameLabel = nameGui and nameGui:FindFirstChild("NameLabel")
     
     humanoid.Died:Connect(function()
+        -- Guardar referencias originales
         local originalOutdoorAmbient = Lighting.OutdoorAmbient
         local originalTimeOfDay = Lighting.TimeOfDay
         local originalFogColor = Lighting.FogColor
         local originalFogEnd = Lighting.FogEnd
         
+        -- Si existe el nameLabel, cambiar su texto
         if nameLabel then
-            nameLabel.Text = "BAD ENDING"
+            nameLabel.Text = "BAD CHOICE"
             nameLabel.TextSize = 48
             nameLabel.TextColor3 = Color3.new(1, 0, 0)
         end
         
+        -- Cambiar iluminación a oscura/roja
         Lighting.OutdoorAmbient = Color3.new(0, 0, 0)
         Lighting.TimeOfDay = "00:00:00"
         Lighting.FogColor = Color3.new(0, 0, 0)
         Lighting.FogEnd = 1000
         
+        -- Efecto de explosión (invisible pero visual)
+        local ex = Instance.new("Explosion", workspace)
+        ex.Position = torso.Position
+        ex.Visible = false
+        ex.BlastRadius = 0 -- Sin daño real
+        
+        -- Esperar y restaurar (opcional, el original no restaura)
+        -- Puedes comentar esto si quieres que la oscuridad sea permanente
         wait(5)
         Lighting.OutdoorAmbient = originalOutdoorAmbient
         Lighting.TimeOfDay = originalTimeOfDay
@@ -224,13 +271,33 @@ local function SetupDeathEffects()
     end)
 end
 
+--[[======================
+    INICIALIZACIÓN
+    ======================]]
+
+-- Esperar a que el personaje esté listo
 if not chara then
     chara = player.CharacterAdded:Wait()
 end
 
+-- Pequeña pausa para asegurar que todo esté cargado
 wait(1)
 
+-- Crear todos los efectos
 CreateAura()
 local nameGui, nameLabel = CreateFloatingName()
 local skybox = CreateSkybox()
 SetupDeathEffects()
+
+-- Mantener el personaje vivo (opcional, si quieres ser inmortal como el original)
+-- Descomenta las siguientes líneas si quieres ser inmortal
+--[[
+local humanoid = chara:WaitForChild("Humanoid")
+while humanoid and humanoid.Health > 0 do
+    wait(1)
+    humanoid.MaxHealth = math.huge
+    humanoid.Health = math.huge
+end
+--]]
+
+print("Efectos de John Doe cargados correctamente")
