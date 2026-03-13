@@ -179,10 +179,10 @@ local function CreateFloatingName()
                 elseif sel == 2 then
                     nameLabel.Text = "GIVEUP"
                 elseif sel == 3 then
-                    nameLabel.Text = "BLACKHOLE"
+                    nameLabel.Text = "BURNINHELL"
                 end
             else
-                nameLabel.Text = "Emma"
+                nameLabel.Text = "John Doe"
             end
             
             -- Efecto de temblor (opcional)
