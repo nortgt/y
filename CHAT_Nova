@@ -87,9 +87,9 @@ local AntiFlood = {
             notify(warningTitle, warningMsg, 3)
             
             if warnings >= 5 then
-                self.State.LastMessageTime = currentTime + 60
-                notify("🚫 ANTI-SPAM", "muted 60s for spam", 5)
-                table.insert(issues, "🚫 muted 60 seconds")
+                self.State.LastMessageTime = currentTime + 50
+                notify("🚫 ANTI-SPAM", "muted 50s for spam", 5)
+                table.insert(issues, "🚫 muted 50 seconds")
             elseif warnings >= 3 then
                 self.State.LastMessageTime = currentTime + 15
                 notify("⚠️ WARNING #" .. warnings, "you have received " .. warnings .. " warnings for bad behavior", 4)
