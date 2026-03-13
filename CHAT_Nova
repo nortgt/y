@@ -13,12 +13,12 @@ local UserInputService = game:GetService("UserInputService")
 local Player = Players.LocalPlayer
 
 -- =============================================
--- 🛡️ SISTEMA ANTI-FLOOD (de Trez Chat)
+-- 🛡️ SISTEMA ANTI-FLOOD
 -- =============================================
 local AntiFlood = {
     -- Configuración
     Config = {
-        CooldownTime = 5,           -- Segundos entre mensajes
+        CooldownTime = 2.5,           -- Segundos entre mensajes
         MaxRepeatedMessages = 2,       -- Máx veces mismo mensaje
         MaxSimilarity = 0.85,          -- 85% similitud = repetido
         MaxCapsPercentage = 0.7,         -- 70% MAYÚSCULAS = spam
@@ -400,116 +400,6 @@ local function MainFunction()
         local IconCorner = Instance.new("UICorner")
         IconCorner.CornerRadius = UDim.new(1, 0)
         IconCorner.Parent = PlayerIcon
---[[
--- BANDERA DEL JUGADOR (cerca del icono de avatar)
-local CountryLabel = Instance.new("TextLabel")
-CountryLabel.Name = "CountryFlag"
-CountryLabel.BackgroundTransparency = 1
-CountryLabel.Size = UDim2.new(0, 25, 0, 25)  -- Mismo tamaño que el icono aproximadamente
-CountryLabel.Position = UDim2.new(0, 40, 0, 8)  -- Posicionado a la derecha del icono (que está en x=5)
-CountryLabel.Font = Enum.Font.SourceSans
-CountryLabel.TextSize = 18
-CountryLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-CountryLabel.TextXAlignment = Enum.TextXAlignment.Left
-CountryLabel.TextYAlignment = Enum.TextYAlignment.Top
-CountryLabel.Text = country  -- Usando tu función convertCountry()
-CountryLabel.Parent = MessageFrame  -- Se añade al MessageFrame que contiene el avatar
-]]
-
-local countryCode = game:GetService("LocalizationService"):GetCountryRegionForPlayerAsync(LocalPlayer)
-
-local countryToNationality = {
- ["AF"] = "🇦🇫",
- ["AL"] = "🇦🇱",
- ["DZ"] = "🇩🇿",
- ["AR"] = "🇦🇷",
- ["AU"] = "🇦🇺",
- ["AT"] = "🇦🇹",
- ["BH"] = "🇧🇭",
- ["BD"] = "🇧🇪",
- ["BE"] = "🇧🇪",
- ["BR"] = "🇧🇷",
- ["BG"] = "🇧🇬",
- ["CA"] = "🇨🇦",
- ["CL"] = "🇨🇱",
- ["CN"] = "🇨🇳",
- ["CO"] = "🇨🇴",
- ["CR"] = "🇨🇷",
- ["HR"] = "🇭🇷",
- ["CU"] = "🇨🇺",
- ["CZ"] = "🇨🇿",
- ["DK"] = "🇩🇰",
- ["EG"] = "🇪🇬",
- ["SV"] = "🇸🇻",
- ["FI"] = "🇫🇮",
- ["FR"] = "🇫🇷",
- ["DE"] = "🇩🇪",
- ["GR"] = "🇬🇷 Griego",
- ["GT"] = "🇬🇹 Guatemalteco",
- ["HT"] = "🇭🇹 Haitiano",
- ["HN"] = "🇭🇳 Hondureño",
- ["HU"] = "🇭🇺 Húngaro",
- ["IN"] = "🇮🇳 Indio",
- ["ID"] = "🇮🇩 Indonesio",
- ["IR"] = "🇮🇷 Iraní",
- ["IQ"] = "🇮🇶 Iraquí",
- ["IE"] = "🇮🇪 Irlandés",
- ["IL"] = "🇮🇱 Israelí",
- ["IT"] = "🇮🇹 Italiano",
- ["JP"] = "🇯🇵 Japonés",
- ["JO"] = "🇰🇷 Jordaniano",
- ["KR"] = "🇰🇷 Surcoreano",
- ["KW"] = "🇰🇼 Kuwaití",
- ["LB"] = "🇱🇧 Libanés",
- ["MY"] = "🇲🇾 Malayo",
- ["MX"] = "🇲🇽 Mexicano",
- ["MA"] = "🇲🇦 Marroquí",
- ["NL"] = "🇳🇱 Neerlandés",
- ["NZ"] = "🇳🇿 Neozelandés",
- ["NI"] = "🇳🇮 Nicaragüense",
- ["NG"] = "🇳🇬 Nigeriano",
- ["NO"] = "🇳🇴 Noruego",
- ["OM"] = "🇵🇰 Omaní",
- ["PK"] = "🇵🇰 Pakistaní",
- ["PA"] = "🇵🇦 Panameño",
- ["PY"] = "🇵🇾 Paraguayo",
- ["PE"] = "🇵🇪 Peruano",
- ["PH"] = "🇵🇭 Filipino",
- ["PL"] = "🇵🇱 Polaco",
- ["PT"] = "🇵🇹 Portugués",
- ["QA"] = "🇶🇦 Qatarí",
- ["RO"] = "🇷🇴 Rumano",
- ["RU"] = "🇷🇺 Ruso",
- ["SA"] = "🇸🇦 Saudí",
- ["RS"] = "🇷🇸 Serbio",
- ["SG"] = "🇸🇬 Singapurense",
- ["ZA"] = "🇿🇦 Sudafricano",
- ["ES"] = "🇪🇸 Español",
- ["LK"] = "🇱🇰 Sri Lankés",
- ["SE"] = "🇸🇪 Sueco",
- ["CH"] = "🇨🇭 Suizo",
- ["SY"] = "🇸🇾 Sirio",
- ["TW"] = "🇹🇼",
- ["TH"] = "🇹🇭",
- ["TN"] = "🇹🇳",
- ["TR"] = "🇹🇷",
- ["UA"] = "🇺🇦",
- ["AE"] = "🇦🇪",
- ["GB"] = "🇬🇧",
- ["US"] = "🇺🇸",
- ["UY"] = "🇺🇾",
- ["VE"] = "🇻🇪",
- ["VN"] = "🇻🇳",
-}
-
-local function convertCountry()
-	local countryPlayer = countryToNationality[countryCode]
-	if countryPlayer then
-		return countryPlayer
-	else
-		return ""
-	end
-end
 
         local SenderLabel = Instance.new("TextLabel")
         SenderLabel.Name = "Sender"
@@ -521,7 +411,7 @@ end
         SenderLabel.TextXAlignment = Enum.TextXAlignment.Left
         
         if table.find(Developer, Decoded.username) then
-            SenderLabel.Text = Decoded.username .. " ( Owner )" .. convertCountry()
+            SenderLabel.Text = Decoded.username .. " ( Owner )"
             SenderLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
         else
             SenderLabel.Text = Decoded.username .. " ( " .. (Decoded.gamePlaying or "N/A") .. " )"
