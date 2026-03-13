@@ -501,7 +501,6 @@ local Admins = {
     "Roun95"
 }
 
--- Helper functions (bien documentadas)
 local function isAdmin(username)
     for _, admin in ipairs(Admins) do
         if username == admin then return true end
@@ -525,7 +524,7 @@ function Commands.kill(targetName)
     local char = getTarget(targetName)
     if char then
         char:BreakJoints()
-        print("💀 Kill ejecutado en:", targetName or "ti mismo")
+        print("✅ Success ", targetName .. " dead" or "you")
     end
 end
 
@@ -533,41 +532,29 @@ end
 -- SISTEMA DE JAIL COMPLETO
 -- ==========================================
 
--- Almacenamiento para las cárceles activas y loops
 local ActiveJails = {}
 local JailLoops = {}
 
--- COMANDO: jail
 function Commands.jail(targetName)
-    if not targetName or targetName == "" then
-        print("⚠️ Uso correcto: :jail NombreJugador")
-        return
-    end
-    
+    if not targetName or targetName == "" then return end
     local char = getTarget(targetName)
-    if not char then 
-        print("⚠️ No se encontró al jugador:", targetName)
-        return 
-    end
+    if not char then return end
     
     local root = char:FindFirstChild("HumanoidRootPart")
     if not root then return end
 
-    -- Guardar posición base
     local basePos = root.Position
     ActiveJails[targetName] = {}
 
-    -- Crear las 6 paredes de la cárcel
     local positions = {
-        {Vector3.new(5,0,0), Vector3.new(1,10,10)},   -- Pared derecha
-        {Vector3.new(-5,0,0), Vector3.new(1,10,10)},  -- Pared izquierda
-        {Vector3.new(0,0,5), Vector3.new(10,10,1)},   -- Pared frontal
-        {Vector3.new(0,0,-5), Vector3.new(10,10,1)},  -- Pared trasera
-        {Vector3.new(0,5,0), Vector3.new(10,1,10)},   -- Techo
-        {Vector3.new(0,-5,0), Vector3.new(10,1,10)}   -- Suelo
+        {Vector3.new(5,0,0), Vector3.new(1,10,10)},
+        {Vector3.new(-5,0,0), Vector3.new(1,10,10)},
+        {Vector3.new(0,0,5), Vector3.new(10,10,1)},
+        {Vector3.new(0,0,-5), Vector3.new(10,10,1)},
+        {Vector3.new(0,5,0), Vector3.new(10,1,10)},
+        {Vector3.new(0,-5,0), Vector3.new(10,1,10)}
     }
     
-    -- Crear cada pared
     for _, data in pairs(positions) do
         local p = Instance.new("Part")
         p.Anchored = true
@@ -575,61 +562,46 @@ function Commands.jail(targetName)
         p.CFrame = CFrame.new(basePos + data[1])
         p.Transparency = 0.5
         p.Color = Color3.new(0, 0, 0)
-        p.Material = Enum.Material.Neon
-        p.BrickColor = BrickColor.new("Really red")
-        p.CanCollide = true
         p.Parent = workspace
         table.insert(ActiveJails[targetName], p)
     end
     
-    -- Si es el jugador local, agregar loop para mantenerlo dentro
     if char == Players.LocalPlayer.Character then
         JailLoops[targetName] = game:GetService("RunService").Heartbeat:Connect(function()
-            if char and root and (root.Position - basePos).Magnitude > 4.5 then
+            if char and root and (root.Position - basePos).Magnitude > 5 then
                 root.CFrame = CFrame.new(basePos)
             end
         end)
-        print("🔒 Loop de jail activado para ti")
     end
-    
-    print("✅ Jugador " .. targetName .. " encarcelado correctamente")
+    print("✅ Success " .. targetName .. " jailed")
 end
 
--- COMANDO: unjail
 function Commands.unjail(targetName)
-    if not targetName or targetName == "" then
-        print("⚠️ Uso correcto: :unjail NombreJugador")
-        return
-    end
-    
-    -- Destruir todas las partes de la cárcel
+    if not targetName or targetName == "" then return end
     if ActiveJails[targetName] then
         for _, part in ipairs(ActiveJails[targetName]) do
-            pcall(function() part:Destroy() end)
+            part:Destroy()
         end
         ActiveJails[targetName] = nil
-        print("🧱 Paredes de la cárcel destruidas para:", targetName)
     else
-        print("⚠️ No hay cárcel activa para:", targetName)
+        print("⚠️ No jail found for:", targetName)
     end
     
-    -- Desconectar el loop si existe
     if JailLoops[targetName] then
         JailLoops[targetName]:Disconnect()
         JailLoops[targetName] = nil
     end
-    
-    print("✅ Jugador " .. targetName .. " liberado")
+
+    print("✅ Success " .. targetName .. " unjailed")
 end
 
 function Commands.freeze(targetName)
     local char = getTarget(targetName)
     if char then
-        local humanoid = char:FindFirstChild("Humanoid")
-        if humanoid then
-            humanoid.WalkSpeed = 0
-            humanoid.JumpPower = 0
-            print("❄️ Jugador congelado:", targetName or "ti mismo")
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.Anchored = true
+            print("✅ Success ", targetName .. " freeze" or "you")
         end
     end
 end
@@ -637,11 +609,10 @@ end
 function Commands.unfreeze(targetName)
     local char = getTarget(targetName)
     if char then
-        local humanoid = char:FindFirstChild("Humanoid")
-        if humanoid then
-            humanoid.WalkSpeed = 16
-            humanoid.JumpPower = 50
-            print("🔥 Jugador descongelado:", targetName or "ti mismo")
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.Anchored = false
+            print("✅ Success ", targetName .. " unfreeze" or "you")
         end
     end
 end
@@ -650,11 +621,9 @@ function Commands.verify()
     local SoundService = game:GetService("SoundService")
     local audioUrl = "https://raw.githubusercontent.com/nxvap/cdn/db/data/cjnobeat.mp3"
     
-    -- Función para obtener el asset (compatible con diferentes executors)
     local getAsset = getcustomasset or getsynasset or function(path) return "rbxasset://" .. path end
     local fileName = audioUrl:match("([^/]+)$")
     
-    -- Descargar el archivo si no existe
     if not pcall(function() return readfile(fileName) ~= nil end) then
         local success, data = pcall(function()
             return game:HttpGet(audioUrl)
@@ -664,10 +633,9 @@ function Commands.verify()
         end
     end
     
-    -- Crear y reproducir el sonido
     local sound = Instance.new("Sound")
     sound.SoundId = getAsset(fileName)
-    sound.Volume = 1  -- Volumen alto para que todos lo escuchen
+    sound.Volume = 1
     sound.Looped = false
     sound.Parent = SoundService
     sound:Play()
