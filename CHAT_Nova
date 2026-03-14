@@ -26,8 +26,8 @@ local AntiFlood = {
     Config = {
         CooldownTime = 3,
         MaxRepeatedMessages = 2,
-        MaxSimilarity = 0.9,
-        MaxCapsPercentage = 0.7,
+        MaxSimilarity = 0.7,
+        MaxCharRepeatPercentage = 0.7,
     },
     
     State = {
@@ -65,13 +65,16 @@ local AntiFlood = {
             end
         end
         
-        local capsCount = 0
-        for char in message:gmatch(".") do
-            if char:match("%u") then capsCount = capsCount + 1 end
+        local charCount = {}
+        local maxCount = 0
+        for char in message:lower():gmatch(".") do
+            charCount[char] = (charCount[char] or 0) + 1
+            if charCount[char] > maxCount then maxCount = charCount[char] end
         end
-        local capsRatio = #message > 0 and capsCount / #message or 0
-        if capsRatio > self.Config.MaxCapsPercentage and #message > 10 then
-            table.insert(issues, "Do not send too many capital letters")
+        
+        local repeatRatio = maxCount / #message
+        if repeatRatio > self.Config.MaxCapsPercentage and #message > 10 then
+            table.insert(issues, "Do not repeat characters too much")
         end
         
         if #issues > 0 then
@@ -87,10 +90,10 @@ local AntiFlood = {
             notify(warningTitle, warningMsg, 3)
             
             if warnings >= 5 then
-                self.State.LastMessageTime = currentTime + 50
-                notify("🚫 ANTI-SPAM", "muted 50s for spam", 5)
-                table.insert(issues, "🚫 muted 50 seconds")
-            elseif warnings >= 3 then
+                self.State.LastMessageTime = currentTime + 30
+                notify("🚫 ANTI-SPAM", "muted 30s for spam", 5)
+                table.insert(issues, "🚫 muted 30 seconds")
+            elseif warnings >= 2 then
                 self.State.LastMessageTime = currentTime + 15
                 notify("⚠️ WARNING #" .. warnings, "you have received " .. warnings .. " warnings for bad behavior", 4)
             end
@@ -100,7 +103,7 @@ local AntiFlood = {
         
         self.State.LastMessageTime = currentTime
         self.State.LastMessageContent = message
-        self.State.UserWarnings[playerName] = math.max(0, warnings - 0.5)  -- Decae con el tiempo
+        self.State.UserWarnings[playerName] = math.max(0, warnings - 0.7)
         
         return true, {}
     end,
