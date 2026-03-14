@@ -511,13 +511,8 @@ function Commands.kill(targetName)
     local char = getTarget(targetName)
     if char then
         char:BreakJoints()
-        notify("✅ SUCCESS", "Player dead: " .. (targetName or "you"), 3)
     end
 end
-
--- ==========================================
--- SISTEMA DE JAIL COMPLETO
--- ==========================================
 
 local ActiveJails = {}
 local JailLoops = {}
@@ -561,8 +556,6 @@ function Commands.jail(targetName)
             end
         end)
     end
-    
-    notify("✅ SUCCESS ", "Player " .. targetName .. " jailed", 4)
 end
 
 function Commands.unjail(targetName)
@@ -573,16 +566,12 @@ function Commands.unjail(targetName)
             part:Destroy()
         end
         ActiveJails[targetName] = nil
-    else
-        notify("⚠️ No jail found for:", targetName)
     end
     
     if JailLoops[targetName] then
         JailLoops[targetName]:Disconnect()
         JailLoops[targetName] = nil
     end
-    
-    notify("✅ SUCCESS ", "Player " .. targetName .. " unjailed", 4)
 end
 
 function Commands.freeze(targetName)
@@ -591,7 +580,6 @@ function Commands.freeze(targetName)
         local hrp = char:FindFirstChild("HumanoidRootPart")
         if hrp then
             hrp.Anchored = true
-            notify("✅ SUCCESS ", "freeze: " .. (targetName or "you"), 3)
         end
     end
 end
@@ -602,9 +590,32 @@ function Commands.unfreeze(targetName)
         local hrp = char:FindFirstChild("HumanoidRootPart")
         if hrp then
             hrp.Anchored = false
-            notify("✅ SUCCESS ", "unfreeze: " .. (targetName or "you"), 3)
         end
     end
+end
+
+function Commands.warn(args)
+    if not args or args == "" then return end
+    
+    local targetName, reason = args:match("^(%S+)%s*(.-)$")
+    if not targetName then
+        targetName = args
+        reason = "No reason provided"
+    end
+    
+    local targetPlayer = Players:FindFirstChild(targetName)
+    if not targetPlayer then return end
+
+    local DataContent = {
+        type = "message",
+        username = "Admin",
+        message = targetPlayer.Name .. " has been warned by " .. Player.Name .. " for " .. reason,
+        userid = 1,
+        gamePlaying = "SERVER",
+        gameid = game.PlaceId
+    }
+
+    getgenv().novachat:Send(HttpService:JSONEncode(DataContent))
 end
 
 function Commands.music()
@@ -646,9 +657,11 @@ end
 
 local function ProcessCommand(message, username)
     if string.sub(message, 1, 1) ~= ":" then return end
-    
+	
+    local isLocalUser = (username == Player.Name)
+	
     if not isAdmin(username) then
-        notify("⛔ Access blocked: You do not have permission ", username)
+	    if isLocalUser then notify("⛔ Access blocked: You do not have permission ", username) end
         return
     end
     
@@ -662,13 +675,17 @@ local function ProcessCommand(message, username)
     cmd = cmd:lower()
     
     if Commands[cmd] then
-        local success, err = pcall(Commands[cmd], args)
+        local success, err = pcall(function()
+            Commands[cmd](args)
+            if isLocalUser then notify("✅ SUCCESS", "Command :" .. cmd .. " executed successfully", 3) end
+        end)
+		
         if not success then
             warn("❌ COMMAND ERROR: " .. cmd .. ":", err)
-            notify("❌ ERROR", "There was an error while executing the command: " .. cmd, 4)
+			if isLocalUser then notify("❌ ERROR", "There was an error while executing the command: " .. cmd, 4) end
         end
     else
-        notify("❓ ERROR", "Command not found: " .. cmd .. "\nUse :info to see the list of commands", 5)
+		if isLocalUser then notify("❓ ERROR", "Command not found: " .. cmd .. "\nUse info to see the list of commands", 5) end
     end
 end
 
