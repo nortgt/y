@@ -66,7 +66,7 @@ local AntiFlood = {
         end
 
         local capsCount = 0
-        for char in message:lower():gmatch(".") do
+        for char in message:gmatch(".") do
             if char:match("%u") then capsCount = capsCount + 1 end
         end
         local capsRatio = #message > 0 and capsCount / #message or 0
@@ -139,7 +139,7 @@ G2L.Main.ZIndex = 2
 G2L.Main.BorderSizePixel = 0
 G2L.Main.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 G2L.Main.AnchorPoint = Vector2.new(0.5, 0.5)
-G2L.Main.Size = UDim2.new(0.38, 0, 0.54, 0)
+G2L.Main.Size = UDim2.new(0.4, 0, 0.6, 0)
 G2L.Main.Position = UDim2.new(0.5, 0, 0.5, 0)
 G2L.Main.BackgroundTransparency = 0.05
 G2L.Main.Parent = G2L.ScreenGui
