@@ -262,6 +262,7 @@ G2L.ChatHistory.ScrollBarImageColor3 = Color3.fromRGB(248, 248, 248)
 G2L.ChatHistory.Position = UDim2.new(0.03, 0, 0.18, 0)
 G2L.ChatHistory.ScrollBarThickness = 3
 G2L.ChatHistory.BackgroundTransparency = 0.65
+G2L.ChatHistory.ScrollingDirection = Enum.ScrollingDirection.Y
 G2L.ChatHistory.Parent = G2L.Main
 
 G2L.ChatLayout = Instance.new("UIListLayout")
