@@ -65,13 +65,20 @@ local AntiFlood = {
             end
         end
 
-        local capsCount = 0
-        for char in message:gmatch(".") do
-            if char:match("%u") then capsCount = capsCount + 1 end
+        local charCount = {}
+        local maxCount = 0
+
+        for i = 1, #message do
+            local char = message:sub(i, i):lower()
+            charCount[char] = (charCount[char] or 0) + 1
+            if charCount[char] > maxCount then
+                maxCount = charCount[char]
+            end
         end
-        local capsRatio = #message > 0 and capsCount / #message or 0
-        if capsRatio > self.Config.MaxCapsPercentage and #message > 10 then
-            table.insert(issues, "Do not send too many capital letters")
+
+        local repeatRatio = maxCount / #message
+        if repeatRatio > self.Config.MaxCapsPercentage and #message > 10 then
+            table.insert(issues, "Do not repeat characters too much")
         end
         
         if #issues > 0 then
