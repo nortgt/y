@@ -27,7 +27,7 @@ local AntiFlood = {
         CooldownTime = 3,
         MaxRepeatedMessages = 2,
         MaxSimilarity = 0.7,
-        -- MaxCharRepeatPercentage = 0.7,
+        MaxCapsPercentage = 0.7,
     },
     
     State = {
@@ -63,6 +63,15 @@ local AntiFlood = {
             else
                 self.State.RepeatCount = 0
             end
+        end
+
+        local capsCount = 0
+        for char in message:lower():gmatch(".") do
+            if char:match("%u") then capsCount = capsCount + 1 end
+        end
+        local capsRatio = #message > 0 and capsCount / #message or 0
+        if capsRatio > self.Config.MaxCapsPercentage and #message > 10 then
+            table.insert(issues, "Do not send too many capital letters")
         end
         
         if #issues > 0 then
@@ -382,7 +391,7 @@ local function MainFunction()
         SenderLabel.TextXAlignment = Enum.TextXAlignment.Left
         
         if isDeveloper then
-            SenderLabel.Text = Decoded.username .. " (Owner)"
+            SenderLabel.Text = Decoded.username .. " ( Owner ) "
             SenderLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
             
             local VerifyIcon = Instance.new("ImageLabel")
@@ -416,7 +425,6 @@ local function MainFunction()
         MessageLabel.Size = UDim2.new(1, -50, 0, math.max(25, textHeight + 5))
         MessageFrame.Size = UDim2.new(1, -10, 0, 40 + math.max(0, textHeight - 20))
         
-        -- Auto-scroll al último mensaje
         ChatHistory.CanvasSize = UDim2.new(0, 0, 0, G2L.ChatLayout.AbsoluteContentSize.Y + 10)
         ChatHistory.CanvasPosition = Vector2.new(0, ChatHistory.CanvasSize.Y.Offset)
     end)
@@ -599,7 +607,7 @@ function Commands.warn(args)
         username = "Admin",
         message = targetPlayer.Name .. " has been warned by " .. Player.Name .. " for " .. reason,
         userid = 1,
-        gamePlaying = "SERVER",
+        gamePlaying = "Server",
         gameid = game.PlaceId
     }
 
