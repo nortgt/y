@@ -379,7 +379,7 @@ local function MainFunction()
         PlayerIcon.Name = "PlayerIcon"
         PlayerIcon.BackgroundTransparency = 1
         PlayerIcon.Size = UDim2.new(0, 35, 0, 35)
-        PlayerIcon.Position = UDim2.new(0, 5, 0, 5)
+        PlayerIcon.Position = UDim2.new(0, 5, 0, 0)
         PlayerIcon.Image = "rbxthumb://type=AvatarHeadShot&id=" .. (Decoded.userid or 0) .. "&w=420&h=420"
         PlayerIcon.Parent = MessageFrame
 
@@ -393,7 +393,7 @@ local function MainFunction()
         SenderLabel.Name = "Sender"
         SenderLabel.BackgroundTransparency = 1
         SenderLabel.Size = UDim2.new(1, -50, 0, 18)
-        SenderLabel.Position = UDim2.new(0, 45, 0, 5)
+        SenderLabel.Position = UDim2.new(0, 45, 0, 0)
         SenderLabel.Font = Enum.Font.SourceSansBold
         SenderLabel.TextSize = 15
         SenderLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -419,7 +419,7 @@ local function MainFunction()
         MessageLabel.Name = "MessageSource"
         MessageLabel.BackgroundTransparency = 1
         MessageLabel.Size = UDim2.new(1, -50, 0, 25)
-        MessageLabel.Position = UDim2.new(0, 45, 0, 23)
+        MessageLabel.Position = UDim2.new(0, 45, 0, 20)
         MessageLabel.Font = Enum.Font.SourceSans
         MessageLabel.TextSize = 14
         MessageLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -431,7 +431,7 @@ local function MainFunction()
 
         local textHeight = MessageLabel.TextBounds.Y
         MessageLabel.Size = UDim2.new(1, -50, 0, math.max(25, textHeight + 5))
-        MessageFrame.Size = UDim2.new(1, -10, 0, 40 + math.max(0, textHeight - 20))
+        MessageFrame.Size = UDim2.new(1, -10, 0, 50 + math.max(0, textHeight - 20))
         
         ChatHistory.CanvasSize = UDim2.new(0, 0, 0, G2L.ChatLayout.AbsoluteContentSize.Y + 10)
         ChatHistory.CanvasPosition = Vector2.new(0, ChatHistory.CanvasSize.Y.Offset)
