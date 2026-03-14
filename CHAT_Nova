@@ -66,13 +66,22 @@ local AntiFlood = {
         end
         
         local charCount = {}
-        local maxCount = 0
-        for char in message:lower():gmatch(".") do
+        local totalChars = 0
+        
+        for char in message:gmatch(".") do
+            char = char:lower()  -- Convertir a minúsculas
             charCount[char] = (charCount[char] or 0) + 1
-            if charCount[char] > maxCount then maxCount = charCount[char] end
+            totalChars = totalChars + 1
         end
         
-        local repeatRatio = maxCount / #message
+        local maxCount = 0
+        for char, count in pairs(charCount) do
+            if count > maxCount then
+                maxCount = count
+            end
+        end
+        
+        local repeatRatio = totalChars > 0 and maxCount / totalChars or 0
         if repeatRatio > self.Config.MaxCapsPercentage and #message > 10 then
             table.insert(issues, "Do not repeat characters too much")
         end
