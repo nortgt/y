@@ -141,7 +141,7 @@ G2L.Main.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 G2L.Main.AnchorPoint = Vector2.new(0.5, 0.5)
 G2L.Main.Size = UDim2.new(0.4, 0, 0.6, 0)
 G2L.Main.Position = UDim2.new(0.5, 0, 0.5, 0)
-G2L.Main.BackgroundTransparency = 0.05
+G2L.Main.BackgroundTransparency = 0.15
 G2L.Main.Parent = G2L.ScreenGui
 
 local MainGradient = Instance.new("UIGradient")
@@ -238,7 +238,7 @@ G2L.TitleLabel.BackgroundTransparency = 1
 G2L.TitleLabel.RichText = true
 G2L.TitleLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 G2L.TitleLabel.Size = UDim2.new(0.84, 0, 0.1, 0)
-G2L.TitleLabel.Text = "<font color='rgb(255, 200, 20)'><font face='Arial'>Nova</font></font> <font color='rgb(255, 255, 255)'>Chat BETA</font>"
+G2L.TitleLabel.Text = "<font color='rgb(255, 200, 20)'><font face='Arial'>NOVA</font></font> <font color='rgb(255, 255, 255)'>Chat BETA</font>"
 G2L.TitleLabel.Position = UDim2.new(0.46, 0, 0.08, 0)
 G2L.TitleLabel.Parent = G2L.Main
 
@@ -261,7 +261,7 @@ G2L.ChatHistory.Size = UDim2.new(0.94, 0, 0.62, 0)
 G2L.ChatHistory.ScrollBarImageColor3 = Color3.fromRGB(248, 248, 248)
 G2L.ChatHistory.Position = UDim2.new(0.03, 0, 0.18, 0)
 G2L.ChatHistory.ScrollBarThickness = 3
-G2L.ChatHistory.BackgroundTransparency = 0.65
+G2L.ChatHistory.BackgroundTransparency = 0.7
 G2L.ChatHistory.ScrollingDirection = Enum.ScrollingDirection.Y
 G2L.ChatHistory.Parent = G2L.Main
 
