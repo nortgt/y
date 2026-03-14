@@ -622,30 +622,61 @@ function Commands.warn(args)
     getgenv().novachat:Send(HttpService:JSONEncode(DataContent))
 end
 
-function Commands.music()
-    local SoundService = game:GetService("SoundService")
-    local audioUrl = "https://raw.githubusercontent.com/nxvap/cdn/db/data/cjnobeat.mp3"
+function Commands.music(args)
+    if not args or args == "" then
+        args = "https://raw.githubusercontent.com/nxvap/hexagon/main/music/music1.mp3"
+    end
     
-    local getAsset = getcustomasset or getsynasset or function(path) return "rbxasset://" .. path end
-    local fileName = audioUrl:match("([^/]+)$")
+    if not args:match("^https?://.*%.(mp3|wav|ogg)$") then return end
+    
+    local SoundService = game:GetService("SoundService")
+    local audioUrl = args
+    
+    local getAsset = getcustomasset or getsynasset or function(path) 
+        return "rbxasset://" .. path 
+    end
+    
+    local fileName = audioUrl:match("([^/]+)%?") or audioUrl:match("([^/]+)$")
+    if not fileName then fileName = "audio_" .. os.time() .. ".mp3" end
     
     if not pcall(function() return readfile(fileName) ~= nil end) then
         local success, data = pcall(function()
             return game:HttpGet(audioUrl)
         end)
-        if success and data then
+        
+        if success and data and #data > 0 then
             pcall(function() writefile(fileName, data) end)
+        else
+            notify("❌ ERROR", "Audio not available", 3)
+            return
         end
     end
     
     local sound = Instance.new("Sound")
+    sound.Name = "NovaMusic"
     sound.SoundId = getAsset(fileName)
     sound.Volume = 1
     sound.Looped = false
     sound.Parent = SoundService
-    sound:Play()
     
-    notify("MUSIC", "Playing sound", 3)
+    sound.Ended:Connect(function()
+        sound:Destroy()
+    end)
+    
+    sound:Play()
+    notify("MUSIC", "Now playing: " .. fileName, 3)
+end
+
+function Commands.stopmusic()
+    local SoundService = game:GetService("SoundService")
+    local sound = SoundService:FindFirstChild("NovaMusic")
+    
+    if sound then
+        sound:Stop()
+        sound:Destroy()
+    else
+        notify("ℹ️ INFO", "No music playing", 2)
+    end
 end
 
 function Commands.info()
